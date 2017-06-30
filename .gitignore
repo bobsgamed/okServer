@@ -1,0 +1,4 @@
+*.class
+/bin
+/src/com/bobsgame/PrivateCredentials.java
+/res/data
