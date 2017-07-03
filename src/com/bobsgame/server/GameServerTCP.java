@@ -1350,7 +1350,21 @@ public class GameServerTCP
 			ps.setString(1, userNameOrEmailAddress);
 			resultSet = ps.executeQuery();
 
-		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());}
+		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());closeDBConnection(databaseConnection);return;}
+
+
+
+		int accountVerified_DB = -1;
+		long accountCreatedTime_DB = -1;
+		String passwordHash_DB = "";
+		long userID_DB = -1;
+		String userName_DB = "";
+		String emailAddress_DB = "";
+		String facebookID_DB = "";
+		long firstLoginTime_DB = -1;
+		int timesLoggedIn_DB = -1;
+		String firstIP_DB = "";
+
 
 		try
 		{
@@ -1358,16 +1372,16 @@ public class GameServerTCP
 			if(resultSet.next())
 			{
 
-				int accountVerified_DB = resultSet.getInt("accountVerified");
-				long accountCreatedTime_DB = resultSet.getLong("accountCreatedTime");
-				String passwordHash_DB = resultSet.getString("passwordHash");
-				long userID_DB = resultSet.getLong("userID");
-				String userName_DB = resultSet.getString("userName");
-				String emailAddress_DB = resultSet.getString("emailAddress");
-				String facebookID_DB = resultSet.getString("facebookID");
-				long firstLoginTime_DB = resultSet.getLong("firstLoginTime");
-				int timesLoggedIn_DB = resultSet.getInt("timesLoggedIn");
-				String firstIP_DB = resultSet.getString("firstIP");
+				accountVerified_DB = resultSet.getInt("accountVerified");
+				accountCreatedTime_DB = resultSet.getLong("accountCreatedTime");
+				passwordHash_DB = resultSet.getString("passwordHash");
+				userID_DB = resultSet.getLong("userID");
+				userName_DB = resultSet.getString("userName");
+				emailAddress_DB = resultSet.getString("emailAddress");
+				facebookID_DB = resultSet.getString("facebookID");
+				firstLoginTime_DB = resultSet.getLong("firstLoginTime");
+				timesLoggedIn_DB = resultSet.getInt("timesLoggedIn");
+				firstIP_DB = resultSet.getString("firstIP");
 
 				if(passwordHash_DB==null)passwordHash_DB="";
 				if(facebookID_DB==null)facebookID_DB="";
@@ -1376,8 +1390,19 @@ public class GameServerTCP
 
 				resultSet.close();
 				ps.close();
-				closeDBConnection(databaseConnection);
 
+
+			}
+			else
+			{
+				resultSet.close();
+				ps.close();
+
+			}
+
+		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());closeDBConnection(databaseConnection);return;}
+
+		closeDBConnection(databaseConnection);
 
 //				if(accountVerified_DB==0)
 //				{
@@ -1385,50 +1410,50 @@ public class GameServerTCP
 //					//log.debug("Account not verified for email:"+emailAddress);
 //				}
 //				else
+		{
+
+
+			String passwordHash = hashPassword(password, accountCreatedTime_DB);
+			if(passwordHash_DB.length()>0 && passwordHash.equals(passwordHash_DB))
+			{
+
+				loggedIn = true;
+
+				c = clientsByUserID.get(userID_DB);
+				if(c==null)
 				{
+					c = new BobsGameClient();
+					c.channel = e.getChannel();
+					c.startTime = System.currentTimeMillis();
+					c.encryptionKey = createRandomHash();
+					c.userID = userID_DB;
+					c.facebookID = facebookID_DB;
+					c.emailAddress = emailAddress_DB;
+					c.userName = userName_DB;
+
+					clientsByChannel.put(e.getChannel(), c);
+					clientsByUserID.put(c.userID,c);
+					if(c.userName.length()>0)clientsByUserName.put(c.userName,c);
+					if(c.emailAddress.length()>0)clientsByEmailAddress.put(c.emailAddress,c);
+					if(c.facebookID.length()>0)clientsByFacebookID.put(c.facebookID,c);
+
+				}
+				else
+				{
+					c.channel = e.getChannel();
+				}
+
+				long firstLoginTime = firstLoginTime_DB;
+				if(firstLoginTime==0)firstLoginTime = c.startTime;
+
+				int timesLoggedIn = timesLoggedIn_DB;
+				timesLoggedIn++;
+
+				String firstIP = firstIP_DB;
+				if(firstIP.length()==0)firstIP = ""+e.getRemoteAddress().toString();
 
 
-					String passwordHash = hashPassword(password, accountCreatedTime_DB);
-					if(passwordHash.equals(passwordHash_DB))
-					{
-
-						loggedIn = true;
-
-						c = clientsByUserID.get(userID_DB);
-						if(c==null)
-						{
-							c = new BobsGameClient();
-							c.channel = e.getChannel();
-							c.startTime = System.currentTimeMillis();
-							c.encryptionKey = createRandomHash();
-							c.userID = userID_DB;
-							c.facebookID = facebookID_DB;
-							c.emailAddress = emailAddress_DB;
-							c.userName = userName_DB;
-
-							clientsByChannel.put(e.getChannel(), c);
-							clientsByUserID.put(c.userID,c);
-							if(c.userName.length()>0)clientsByUserName.put(c.userName,c);
-							if(c.emailAddress.length()>0)clientsByEmailAddress.put(c.emailAddress,c);
-							if(c.facebookID.length()>0)clientsByFacebookID.put(c.facebookID,c);
-
-						}
-						else
-						{
-							c.channel = e.getChannel();
-						}
-
-						long firstLoginTime = firstLoginTime_DB;
-						if(firstLoginTime==0)firstLoginTime = c.startTime;
-
-						int timesLoggedIn = timesLoggedIn_DB;
-						timesLoggedIn++;
-
-						String firstIP = firstIP_DB;
-						if(firstIP.length()==0)firstIP = ""+e.getRemoteAddress().toString();
-
-
-						//check to see if the user is already connected to this server
+				//check to see if the user is already connected to this server
 //						Client check = clientsByUserID.get(c.userID);
 //						if(check!=null)
 //						{
@@ -1444,10 +1469,10 @@ public class GameServerTCP
 //						}
 
 
-						//then send the sessionToken back to the client, which sends it with each update and request along with userID.
-						//ArrayList<ChannelFuture> futures =
+				//then send the sessionToken back to the client, which sends it with each update and request along with userID.
+				//ArrayList<ChannelFuture> futures =
 
-						writeCompressed(e.getChannel(),BobNet.Login_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
+				writeCompressed(e.getChannel(),BobNet.Login_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
 
 //						for(int i=0;i<futures.size();i++)
 //						{
@@ -1458,73 +1483,74 @@ public class GameServerTCP
 //						}
 
 
-						databaseConnection = openAccountsDBOnAmazonRDS();
-						if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
-						try
-						{
-							//store this session token hash in the database, so when the client drops or reconnects later it is validated.
-							ps = databaseConnection.prepareStatement(
-									"UPDATE accounts SET " +
-									"sessionToken = ? , " +
-									"encryptionKey = ? , " +
-									"firstLoginTime = ? , " +
-									"lastLoginTime = ? , " +
-									"lastSeenTime = ? , " +
-									"timesLoggedIn = ? , " +
-									"firstIP = ? , " +
-									"lastIP = ? , " +
-									"isOnline = ? " +
-									"WHERE userID = ?");
+				databaseConnection = openAccountsDBOnAmazonRDS();
+				if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
+				try
+				{
+					//store this session token hash in the database, so when the client drops or reconnects later it is validated.
+					ps = databaseConnection.prepareStatement(
+							"UPDATE accounts SET " +
+							"sessionToken = ? , " +
+							"encryptionKey = ? , " +
+							"firstLoginTime = ? , " +
+							"lastLoginTime = ? , " +
+							"lastSeenTime = ? , " +
+							"timesLoggedIn = ? , " +
+							"firstIP = ? , " +
+							"lastIP = ? , " +
+							"isOnline = ? " +
+							"WHERE userID = ?");
 
-							int i=0;
-							ps.setString(++i, sessionToken);//sessionToken
-							ps.setString(++i, c.encryptionKey);//encryptionKey
-							ps.setLong(++i, firstLoginTime);//firstLoginTime
-							ps.setLong(++i, c.startTime);//lastLoginTime
-							ps.setLong(++i, c.startTime);//lastSeenTime
-							ps.setInt(++i, timesLoggedIn);//timesLoggedIn
-							ps.setString(++i, firstIP);//firstIP
-							ps.setString(++i, ""+e.getRemoteAddress().toString());//lastIP
-							ps.setInt(++i, 1);//isOnline
-							ps.setLong(++i, userID_DB);//emailAddress
-							ps.executeUpdate();
+					int i=0;
+					ps.setString(++i, sessionToken);//sessionToken
+					ps.setString(++i, c.encryptionKey);//encryptionKey
+					ps.setLong(++i, firstLoginTime);//firstLoginTime
+					ps.setLong(++i, c.startTime);//lastLoginTime
+					ps.setLong(++i, c.startTime);//lastSeenTime
+					ps.setInt(++i, timesLoggedIn);//timesLoggedIn
+					ps.setString(++i, firstIP);//firstIP
+					ps.setString(++i, ""+e.getRemoteAddress().toString());//lastIP
+					ps.setInt(++i, 1);//isOnline
+					ps.setLong(++i, userID_DB);//emailAddress
+					ps.executeUpdate();
 
-							ps.close();
-						}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());}
-						closeDBConnection(databaseConnection);
+					ps.close();
+				}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());closeDBConnection(databaseConnection);return;}
 
-
-
-						//tell all other servers to close connection if they are logged in, go through channels here and close channel if they are logged in
-						ServerMain.indexClientTCP.send_INDEX_User_Logged_On_This_Server_Log_Them_Off_Other_Servers(c.userID);
+				closeDBConnection(databaseConnection);
 
 
 
-						//DONE: after login, the client should request the game save, the items/games, the flag values, and the dialoguedone values (included in game save now)
-
-						incomingInitialGameSaveRequest(e);
-
-
-						sendAllUserStatsGameStatsAndLeaderBoardsToClient(c);
-
-
-						//tell friends we are online (happens in friend list request)
-						//send this client online friends list request
-						incomingOnlineFriendsListRequest(e);
+				//tell all other servers to close connection if they are logged in, go through channels here and close channel if they are logged in
+				ServerMain.indexClientTCP.send_INDEX_User_Logged_On_This_Server_Log_Them_Off_Other_Servers(c.userID);
 
 
 
-						// refresh facebook friends, send online friends list
-						if(c.facebookID.length()>0)
-						{
-							incomingUpdateFacebookAccountInDBRequest(e);
-							//incomingOnlineFriendsListRequest(e);
-						}
+				//DONE: after login, the client should request the game save, the items/games, the flag values, and the dialoguedone values (included in game save now)
+
+				incomingInitialGameSaveRequest(e);
 
 
-						//----------------------------------
-						//store stats to dreamhost stats DB
-						//----------------------------------
+				sendAllUserStatsGameStatsAndLeaderBoardsToClient(c);
+
+
+				//tell friends we are online (happens in friend list request)
+				//send this client online friends list request
+				incomingOnlineFriendsListRequest(e);
+
+
+
+				// refresh facebook friends, send online friends list
+				if(c.facebookID.length()>0)
+				{
+					//incomingUpdateFacebookAccountInDBRequest(e);
+					//incomingOnlineFriendsListRequest(e);
+				}
+
+
+				//----------------------------------
+				//store stats to dreamhost stats DB
+				//----------------------------------
 
 //						ClientStats stats = new ClientStats();
 //						//client optionally send machine stats with the login request, have option to skip this
@@ -1547,23 +1573,15 @@ public class GameServerTCP
 //
 //						}
 
-					}
-					else
-					{
-						//wrong password
-						//log.debug("Wrong password for email:"+emailAddress);
-					}
-				}
 			}
 			else
 			{
-				resultSet.close();
-				ps.close();
-				closeDBConnection(databaseConnection);
+				//wrong password
+				//log.debug("Wrong password for email:"+emailAddress);
 			}
+		}
 
 
-		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());}
 
 
 
