@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -54,6 +55,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -115,6 +117,10 @@ import org.slf4j.LoggerFactory;
 
 
 
+import net.jpountz.lz4.LZ4Compressor;
+import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4FastDecompressor;
+import net.jpountz.lz4.LZ4SafeDecompressor;
 
 //===============================================================================================
 public class GameServerTCP
@@ -861,8 +867,121 @@ public class GameServerTCP
 		}
 
 		long id = -1;
-		BobsGameClient client = getClientByChannel(c);
-		if(client!=null)id=client.userID;
+		if(c!=null)
+		{
+			BobsGameClient client = getClientByChannel(c);
+			if(client!=null)id=client.userID;
+		}
+
+
+
+
+//
+//		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
+//
+//		//lzo and base64 string
+//
+//		String lzoString = null;
+//
+//		ByteArrayOutputStream out = new ByteArrayOutputStream();
+//		LzoAlgorithm algorithm = LzoAlgorithm.LZO1X;
+//		LzoCompressor compressor = LzoLibrary.getInstance().newCompressor(algorithm, LzoConstraint.COMPRESSION);
+//		LzoOutputStream lzoStream = new LzoOutputStream(out, compressor, 256);
+//
+//		try
+//		{
+//			lzoStream.write(s.getBytes());
+//			lzoStream.close();
+//			lzoString=out.toString("ISO-8859-1");
+//		}
+//		catch(IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//		String base64 = Utils.encodeStringToBase64(lzoString);
+//		s = new String(base64+BobNet.endline);
+//
+//
+//
+//		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
+//
+
+
+
+//		ByteArrayOutputStream out=new ByteArrayOutputStream();
+//		DeflaterOutputStream gzip;
+//
+//		String zip = null;
+//
+//
+//		try
+//		{
+//			gzip=new DeflaterOutputStream(out);
+//			gzip.write(s.getBytes());
+//			gzip.close();
+//
+//			zip=out.toString("ISO-8859-1");
+//		}
+//		catch(Exception e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//
+//
+//		//String zip = Utils.zipString(s);
+//		String base64 = Utils.encodeStringToBase64(zip);
+//		s = base64+BobNet.endline;
+//
+
+
+
+		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
+
+
+
+
+		try
+		{
+
+			LZ4Factory factory = LZ4Factory.fastestInstance();
+
+			byte[] data;
+			data=s.getBytes("UTF-8");
+
+
+			final int decompressedLength = data.length;
+
+			// compress data
+			LZ4Compressor compressor = factory.fastCompressor();
+			int maxCompressedLength = compressor.maxCompressedLength(decompressedLength);
+			byte[] compressedBuffer = new byte[maxCompressedLength];
+			int compressedLength = compressor.compress(data, 0, decompressedLength, compressedBuffer, 0, maxCompressedLength);
+
+			byte[] compressedBytes = new byte[compressedLength];
+
+			for(int i=0;i<compressedLength;i++)
+			{
+				compressedBytes[i] = compressedBuffer[i];
+			}
+
+
+
+			String base64 = Base64.encodeBase64String(compressedBytes);
+			s = new String(base64+BobNet.endline);
+
+
+		}
+		catch(UnsupportedEncodingException e)
+		{
+			e.printStackTrace();
+		}
+
+
+
+
+
 
 		if(s.length()>1400)
 		{
@@ -873,7 +992,7 @@ public class GameServerTCP
 				String partial = "PARTIAL:" + s.substring(0,1300) + BobNet.endline;
 				s = s.substring(1300);
 
-				log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
+				//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
 
 				futures.add(c.write(partial));
 
@@ -881,7 +1000,7 @@ public class GameServerTCP
 
 			String finalString = "FINAL:" + s + BobNet.endline;
 
-			log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
+			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
 
 			futures.add(c.write(finalString));
 
@@ -889,7 +1008,7 @@ public class GameServerTCP
 		else
 		{
 
-			log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
+			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
 
 			futures.add(c.write(s));
 

@@ -42,15 +42,15 @@ public class AssetDataIndex
 	public AssetDataIndex()
 	{//===============================================================================================
 
-//		importDialogueDataFiles();
-//		importEventDataFiles();
-//		importFlagDataFiles();
-//		importGameStringDataFiles();
-//		importMapDataFiles();
-//		importMusicDataFiles();
-//		importSkillDataFiles();
-//		importSoundDataFiles();
-//		importSpriteDataFiles();
+		importDialogueDataFiles();
+		importEventDataFiles();
+		importFlagDataFiles();
+		importGameStringDataFiles();
+		importMapDataFiles();
+		importMusicDataFiles();
+		importSkillDataFiles();
+		importSoundDataFiles();
+		importSpriteDataFiles();
 	}
 
 
@@ -91,7 +91,7 @@ public class AssetDataIndex
 					dialogueDataGetNameByIDList.put(data.id(),data.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded Dialogue: "+data.name());
+					log.debug("Loaded Dialogue: "+data.name());
 
 				}
 			}
@@ -153,7 +153,7 @@ public class AssetDataIndex
 					eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded Cutscene Event: "+eventAsset.name());
+					log.debug("Loaded Cutscene Event: "+eventAsset.name());
 
 				}
 			}
@@ -207,7 +207,7 @@ public class AssetDataIndex
 					flagDataGetNameByIDList.put(flagAsset.id(),flagAsset.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded Flag: "+flagAsset.name());
+					log.debug("Loaded Flag: "+flagAsset.name());
 
 				}
 			}
@@ -261,7 +261,7 @@ public class AssetDataIndex
 					gameStringDataGetNameByIDList.put(gameStringAsset.id(),gameStringAsset.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded GameString: "+gameStringAsset.name());
+					log.debug("Loaded GameString: "+gameStringAsset.name());
 
 				}
 
@@ -318,6 +318,8 @@ public class AssetDataIndex
 					mapDataGetIDByNameList.put(mapData.name(),mapData.id());
 					mapDataGetNameByIDList.put(mapData.id(),mapData.name());
 
+					log.debug("Loaded Map: "+mapData.name());
+
 					for(int n = 0; n< mapData.eventDataList().size();n++)
 					{
 						EventData eventAsset = mapData.eventDataList().get(n);
@@ -327,6 +329,8 @@ public class AssetDataIndex
 						eventDataByIDBase64List.put(eventAsset.id(),s);
 						eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
 						eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+
+						log.debug("Loaded Map Event: "+eventAsset.name());
 					}
 
 					for(int n = 0; n< mapData.doorDataList().size();n++)
@@ -340,6 +344,8 @@ public class AssetDataIndex
 							eventDataByIDBase64List.put(eventAsset.id(),s);
 							eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
 							eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+
+							log.debug("Loaded Door Event: "+eventAsset.name());
 						}
 					}
 
@@ -358,6 +364,8 @@ public class AssetDataIndex
 								eventDataByIDBase64List.put(eventAsset.id(),s);
 								eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
 								eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+
+								log.debug("Loaded Area Event: "+eventAsset.name());
 							}
 						}
 
@@ -372,12 +380,14 @@ public class AssetDataIndex
 								eventDataByIDBase64List.put(eventAsset.id(),s);
 								eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
 								eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+
+								log.debug("Loaded Entity Event: "+eventAsset.name());
 							}
 						}
 
 					}
 
-					if(BobNet.debugMode)log.debug("Loaded Map: "+mapData.name());
+
 				}
 			}
 		}
@@ -430,7 +440,7 @@ public class AssetDataIndex
 					musicDataGetNameByIDList.put(musicAsset.id(),musicAsset.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded Music: "+musicAsset.name());
+					log.debug("Loaded Music: "+musicAsset.name());
 
 				}
 
@@ -488,7 +498,7 @@ public class AssetDataIndex
 					skillDataGetNameByIDList.put(skillAsset.id(),skillAsset.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded Skill: "+skillAsset.name());
+					log.debug("Loaded Skill: "+skillAsset.name());
 
 				}
 
@@ -545,7 +555,7 @@ public class AssetDataIndex
 					soundDataGetNameByIDList.put(soundAsset.id(),soundAsset.name());
 
 
-					if(BobNet.debugMode)log.debug("Loaded Sound: "+soundAsset.name());
+					log.debug("Loaded Sound: "+soundAsset.name());
 				}
 			}
 		}
@@ -597,6 +607,7 @@ public class AssetDataIndex
 					spriteDataGetIDByNameList.put(spriteAsset.name(),spriteAsset.id());
 					spriteDataGetNameByIDList.put(spriteAsset.id(),spriteAsset.name());
 
+					log.debug("Loaded Sprite: "+spriteAsset.name());
 
 					EventData eventAsset = spriteAsset.eventData;
 
@@ -607,10 +618,12 @@ public class AssetDataIndex
 						eventDataByIDBase64List.put(eventAsset.id(),s);
 						eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
 						eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+
+						log.debug("Loaded Sprite Event: "+eventAsset.name());
 					}
 
 
-					if(BobNet.debugMode)log.debug("Loaded Sprite: "+spriteAsset.name());
+
 
 				}
 

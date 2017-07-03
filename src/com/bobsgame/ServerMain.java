@@ -18,10 +18,12 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -33,7 +35,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.zip.DeflaterOutputStream;
 
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
@@ -43,8 +45,12 @@ import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.text.StyledDocument;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.compress.compressors.deflate.DeflateCompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 
@@ -70,6 +76,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
+import net.jpountz.lz4.LZ4Compressor;
+import net.jpountz.lz4.LZ4Factory;
 
 import com.bobsgame.server.IndexClientTCP;
 import com.bobsgame.net.*;
@@ -78,8 +86,7 @@ import com.bobsgame.server.GameServerTCP.*;
 
 
 import com.bobsgame.server.assets.AssetDataIndex;
-
-
+import com.bobsgame.shared.Utils;
 
 //import com.esotericsoftware.minlog.Log;
 
@@ -147,32 +154,32 @@ public class ServerMain
 
 
 
-		HTMLLayout htmlLayout = new HTMLLayout();
-		htmlLayout.setPattern("%date{yyyy-MM-dd HH:mm:ss}%relative%thread%F%L%c{2}%M%level%msg");
-		htmlLayout.setContext(loggerContext);
-		htmlLayout.start();
-
-		LayoutWrappingEncoder<ILoggingEvent> layoutEncoder = new LayoutWrappingEncoder<ILoggingEvent>();
-		layoutEncoder.setLayout(htmlLayout);
-		layoutEncoder.setContext(loggerContext);
-		layoutEncoder.setImmediateFlush(false);
-		layoutEncoder.start();
-
-
-		ThresholdFilter filter = new ThresholdFilter();
-		filter.setLevel("WARN");
-		filter.setContext(loggerContext);
-
-
-		FileAppender<ILoggingEvent> fileAppender = new FileAppender<ILoggingEvent>();
-		fileAppender.setContext(loggerContext);
-		fileAppender.setEncoder(layoutEncoder);
-		fileAppender.addFilter(filter);
-		fileAppender.setAppend(true);
-		fileAppender.setFile("/var/www/html/log.html");
-		fileAppender.start();
-
-		rootLogger.addAppender(fileAppender);
+//		HTMLLayout htmlLayout = new HTMLLayout();
+//		htmlLayout.setPattern("%date{yyyy-MM-dd HH:mm:ss}%relative%thread%F%L%c{2}%M%level%msg");
+//		htmlLayout.setContext(loggerContext);
+//		htmlLayout.start();
+//
+//		LayoutWrappingEncoder<ILoggingEvent> layoutEncoder = new LayoutWrappingEncoder<ILoggingEvent>();
+//		layoutEncoder.setLayout(htmlLayout);
+//		layoutEncoder.setContext(loggerContext);
+//		layoutEncoder.setImmediateFlush(true);
+//		layoutEncoder.start();
+//
+//
+//		ThresholdFilter filter = new ThresholdFilter();
+//		filter.setLevel("WARN");
+//		filter.setContext(loggerContext);
+//
+//
+//		FileAppender<ILoggingEvent> fileAppender = new FileAppender<ILoggingEvent>();
+//		fileAppender.setContext(loggerContext);
+//		fileAppender.setEncoder(layoutEncoder);
+//		fileAppender.addFilter(filter);
+//		fileAppender.setAppend(true);
+//		fileAppender.setFile("/var/www/html/log.html");
+//		fileAppender.start();
+//
+//		rootLogger.addAppender(fileAppender);
 
 
 
@@ -186,7 +193,250 @@ public class ServerMain
 		//rootLogger.error("error test");
 
 
-		log.setLevel(Level.ALL);
+		//log.setLevel(Level.ALL);
+
+//
+//
+//		log.debug("debug test");
+//		log.info("info test");
+//		log.warn("warn test");
+//		log.error("error test");
+//
+
+
+
+
+
+//		//lzo and base64 string
+//
+//		String lzoString = null;
+//
+//		ByteArrayOutputStream out=new ByteArrayOutputStream();
+//		LzoAlgorithm algorithm = LzoAlgorithm.LZO1X;
+//		LzoCompressor compressor = LzoLibrary.getInstance().newCompressor(algorithm, null);
+//		LzoOutputStream lzoStream = new LzoOutputStream(out, compressor, 256);
+//
+//
+//		//String s = "a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text a bunch of text ";
+//		String s = "Server_IP_Address_Response:34.201.250.43:END:";
+//		try
+//		{
+//			lzoStream.write(s.getBytes());
+//			lzoStream.close();
+//			lzoString=out.toString("ISO-8859-1");
+//		}
+//		catch(IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//		String base64 = Utils.encodeStringToBase64(lzoString);
+//		log.info(base64);
+//
+//System.exit(0);
+//
+
+
+
+
+
+
+//
+//		String s = "Server_IP_Address_Response:34.201.250.43"+BobNet.endline;
+//
+//		s = "a really long test string with repeating words to test. a really long test string with repeating words to test. a really long test string with repeating words to test.";
+//
+//		//log.info("SEND CLIENT: "+s.substring(0,Math.min(100,s.length()-2))+"...");
+//
+//		//lzo and base64 string
+//
+//		String lzoString = null;
+//
+//		ByteArrayOutputStream out=new ByteArrayOutputStream();
+//		LzoAlgorithm algorithm = LzoAlgorithm.LZO1X;
+//		LzoCompressor compressor = LzoLibrary.getInstance().newCompressor(algorithm, LzoConstraint.COMPRESSION);
+//		LzoOutputStream lzoStream = new LzoOutputStream(out, compressor, 256);
+//
+//		try
+//		{
+//
+//
+//			lzoStream.write(s.getBytes());
+//			lzoStream.close();
+//			lzoString=out.toString("ISO-8859-1");
+//
+//			log.info((out.toString("ISO-8859-1")));
+//			log.info((out.toString("UTF-8")));
+//			log.info((out.toString("ASCII")));
+//
+//			log.info(Utils.encodeStringToBase64(out.toString("ISO-8859-1")));
+//			log.info(Utils.encodeStringToBase64(out.toString("UTF-8")));
+//			log.info(Utils.encodeStringToBase64(out.toString("ASCII")));
+//
+//		}
+//		catch(IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//		String base64 = Utils.encodeStringToBase64(lzoString);
+//		s = new String(base64+BobNet.endline);
+//
+//
+//
+//		System.out.println(s);
+//		log.info(s);
+//
+////		gameServerTCP = new GameServerTCP();
+////
+////		gameServerTCP.write(null,"Server_IP_Address_Response:34.201.250.43"+BobNet.endline);
+//
+//
+//		System.exit(0);
+
+
+
+
+
+
+
+
+
+
+
+		String s = "Server_IP_Address_Response:34.201.250.43"+BobNet.endline;
+
+		//s = "a really long test string with repeating words to test. a really long test string with repeating words to test. a really long test string with repeating words to test.";
+//
+//		ByteArrayOutputStream out=new ByteArrayOutputStream();
+//		DeflateCompressorOutputStream gzip;
+//
+//		String zip = null;
+//
+//
+//		try
+//		{
+//			gzip=new DeflateCompressorOutputStream(out);
+//			gzip.write(s.getBytes());
+//			gzip.close();
+//
+//			zip=out.toString("ISO-8859-1");
+//
+//			log.info(Utils.encodeStringToBase64(out.toString("ISO-8859-1")));
+//			log.info(Utils.encodeStringToBase64(out.toString("UTF-8")));
+//			log.info(Utils.encodeStringToBase64(out.toString("ASCII")));
+//		}
+//		catch(Exception e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//
+//
+//		//String zip = Utils.zipString(s);
+//		String base64 = Utils.encodeStringToBase64(zip);
+//		s = base64+BobNet.endline;
+//
+//		log.info(s);
+//
+//		System.exit(0);
+//
+
+
+
+
+
+
+//		try
+//		{
+//
+//			LZ4Factory factory = LZ4Factory.fastestInstance();
+//
+//			byte[] data;
+//			data=s.getBytes("UTF-8");
+//
+//
+//			final int decompressedLength = data.length;
+//
+//			// compress data
+//			LZ4Compressor compressor = factory.fastCompressor();
+//			int maxCompressedLength = compressor.maxCompressedLength(decompressedLength);
+//			byte[] compressedBuffer = new byte[maxCompressedLength];
+//			int compressedLength = compressor.compress(data, 0, decompressedLength, compressedBuffer, 0, maxCompressedLength);
+//
+//			byte[] compressedBytes = new byte[compressedLength];
+//
+//			for(int i=0;i<compressedLength;i++)
+//			{
+//				compressedBytes[i] = compressedBuffer[i];
+//			}
+//
+//
+//
+//			String base64 = Base64.encodeBase64String(compressedBytes);
+//			s = new String(base64+BobNet.endline);
+//
+//		}
+//		catch(UnsupportedEncodingException e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//
+//		log.info(s);
+//
+//		System.exit(0);
+
+
+
+
+//		String s = "Server_IP_Address_Response:34.201.250.43"+BobNet.endline;
+//
+//		ByteArrayOutputStream out=new ByteArrayOutputStream();
+//		DeflaterOutputStream gzip;
+//
+//		String zip = null;
+//
+//
+//		try
+//		{
+//			gzip=new DeflaterOutputStream(out);
+//			gzip.write(s.getBytes());
+//			gzip.close();
+//
+//			zip=out.toString("ISO-8859-1");
+//
+//			log.info(Utils.encodeStringToBase64(out.toString("ISO-8859-1")));
+//			log.info(Utils.encodeStringToBase64(out.toString("UTF-8")));
+//			log.info(Utils.encodeStringToBase64(out.toString("ASCII")));
+//		}
+//		catch(Exception e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//
+//
+//		//String zip = Utils.zipString(s);
+//		String base64 = Utils.encodeStringToBase64(zip);
+//		s = base64+BobNet.endline;
+//
+//		log.info(s);
+//
+//		System.exit(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

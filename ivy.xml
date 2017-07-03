@@ -30,6 +30,7 @@
 <dependency org="commons-io" name="commons-io" rev="latest.integration"/>
 <dependency org="io.netty" name="netty" rev="3.10.6.Final" />
 
+<dependency org="org.apache.commons" name="commons-compress" rev="latest.integration"/>
 
 <!-- <dependency org="org.lwjgl.lwjgl" name="parent" rev="latest.integration" /> --><!-- 2.8.5 -->
 <!-- <dependency org="org.lwjgl.lwjgl" name="lwjgl" rev="latest.integration" /> -->
