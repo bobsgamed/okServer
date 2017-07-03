@@ -1650,25 +1650,33 @@ public class GameServerTCP
 			ps.setLong(1, userID);
 			resultSet = ps.executeQuery();
 
-		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());}
+		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());closeDBConnection(databaseConnection);return;}
 
 
 			//TODO: could cut DB reads in half by storing the gameSave for the clientConnection here until the client requests initialGameSave
 			//but if the client is reconnecting it will never ask for initialGameSave
 			//so could null the gameSave object here after the client requests an update
 			//or could have reconnect and loginWithSessionToken different requests
+
+		String sessionToken_DB = "";
+		String userName_DB = "";
+		String emailAddress_DB = "";
+		String encryptionKey_DB = "";
+		String facebookID_DB = "";
+		int timesLoggedIn_DB = -1;
+
 		try
 		{
 
 			if(resultSet.next())
 			{
 
-				String sessionToken_DB = resultSet.getString("sessionToken");
-				String userName_DB = resultSet.getString("userName");
-				String emailAddress_DB = resultSet.getString("emailAddress");
-				String encryptionKey_DB = resultSet.getString("encryptionKey");
-				String facebookID_DB = resultSet.getString("facebookID");
-				int timesLoggedIn_DB = resultSet.getInt("timesLoggedIn");
+				sessionToken_DB = resultSet.getString("sessionToken");
+				userName_DB = resultSet.getString("userName");
+				emailAddress_DB = resultSet.getString("emailAddress");
+				encryptionKey_DB = resultSet.getString("encryptionKey");
+				facebookID_DB = resultSet.getString("facebookID");
+				timesLoggedIn_DB = resultSet.getInt("timesLoggedIn");
 
 				if(sessionToken_DB==null)sessionToken_DB="";
 				if(userName_DB==null)userName_DB="";
@@ -1678,52 +1686,64 @@ public class GameServerTCP
 
 				resultSet.close();
 				ps.close();
-				closeDBConnection(databaseConnection);
 
-				if(sessionToken.equals(sessionToken_DB))
-				{
+			}
+			else
+			{
+				resultSet.close();
+				ps.close();
 
-					loggedIn = true;
+			}
 
-					c = clientsByUserID.get(userID);
-					if(c==null)
-					{
-						c = new BobsGameClient();
-						c.channel = e.getChannel();
-						c.startTime = System.currentTimeMillis();
-						c.encryptionKey = createRandomHash();
+		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();closeDBConnection(databaseConnection);return;}
 
-						c.userID = userID;
-						c.userName = userName_DB;
-						c.emailAddress = emailAddress_DB;
-						c.facebookID = facebookID_DB;
-
-						clientsByChannel.put(e.getChannel(), c);
-						clientsByUserID.put(c.userID,c);
-						if(c.emailAddress.length()>0)clientsByEmailAddress.put(c.emailAddress,c);
-						if(c.userName.length()>0)clientsByUserName.put(c.userName,c);
-						if(c.facebookID.length()>0)clientsByFacebookID.put(c.facebookID,c);
-					}
-					else
-					{
-						c.channel = e.getChannel();
-					}
-
-					//if there is no encryption key in the database, use the random one we generated just now (this should never happen but who knows)
-					if(encryptionKey_DB==null||encryptionKey_DB.length()==0)
-					{
-						encryptionKey_DB = c.encryptionKey;
-					}
-
-					//set encryption key to the last known one, the user may have dropped and reconnected during gameplay.
-					c.encryptionKey = encryptionKey_DB;
+		closeDBConnection(databaseConnection);
 
 
-					int timesLoggedIn = timesLoggedIn_DB;
-					timesLoggedIn++;
+		if(sessionToken_DB.length()>0 && sessionToken.equals(sessionToken_DB))
+		{
+
+			loggedIn = true;
+
+			c = clientsByUserID.get(userID);
+			if(c==null)
+			{
+				c = new BobsGameClient();
+				c.channel = e.getChannel();
+				c.startTime = System.currentTimeMillis();
+				c.encryptionKey = createRandomHash();
+
+				c.userID = userID;
+				c.userName = userName_DB;
+				c.emailAddress = emailAddress_DB;
+				c.facebookID = facebookID_DB;
+
+				clientsByChannel.put(e.getChannel(), c);
+				clientsByUserID.put(c.userID,c);
+				if(c.emailAddress.length()>0)clientsByEmailAddress.put(c.emailAddress,c);
+				if(c.userName.length()>0)clientsByUserName.put(c.userName,c);
+				if(c.facebookID.length()>0)clientsByFacebookID.put(c.facebookID,c);
+			}
+			else
+			{
+				c.channel = e.getChannel();
+			}
+
+			//if there is no encryption key in the database, use the random one we generated just now (this should never happen but who knows)
+			if(encryptionKey_DB==null||encryptionKey_DB.length()==0)
+			{
+				encryptionKey_DB = c.encryptionKey;
+			}
+
+			//set encryption key to the last known one, the user may have dropped and reconnected during gameplay.
+			c.encryptionKey = encryptionKey_DB;
 
 
-					//check to see if the user is already connected to this server
+			int timesLoggedIn = timesLoggedIn_DB;
+			timesLoggedIn++;
+
+
+			//check to see if the user is already connected to this server
 //					Client check = clientsByUserID.get(c.userID);
 //					if(check!=null)
 //					{
@@ -1740,10 +1760,10 @@ public class GameServerTCP
 
 
 
-					//then send the session token back to the client, which sends it with each update and request along with userID.
-					//ArrayList<ChannelFuture> futures =
+			//then send the session token back to the client, which sends it with each update and request along with userID.
+			//ArrayList<ChannelFuture> futures =
 
-					writeCompressed(e.getChannel(),BobNet.Reconnect_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Reconnect_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
 
 //					for(int i=0;i<futures.size();i++)
 //					{
@@ -1753,58 +1773,59 @@ public class GameServerTCP
 //
 //					}
 
-					databaseConnection = openAccountsDBOnAmazonRDS();
-					if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
-					try
-					{
-						ps = databaseConnection.prepareStatement(
-								"UPDATE accounts SET " +
-								"encryptionKey = ? , " +
-								"lastSeenTime = ? , " +
-								"timesLoggedIn = ? , " +
-								"lastIP = ? , " +
-								"isOnline = ? " +
-								"WHERE userID = ?");
+			databaseConnection = openAccountsDBOnAmazonRDS();
+			if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
+			try
+			{
+				ps = databaseConnection.prepareStatement(
+						"UPDATE accounts SET " +
+						"encryptionKey = ? , " +
+						"lastSeenTime = ? , " +
+						"timesLoggedIn = ? , " +
+						"lastIP = ? , " +
+						"isOnline = ? " +
+						"WHERE userID = ?");
 
-						int i=0;
-						ps.setString(++i, c.encryptionKey);//encryptionKey
-						ps.setLong(++i, c.startTime);//lastSeenTime
-						ps.setInt(++i, timesLoggedIn);//timesLoggedIn
-						ps.setString(++i, ""+e.getRemoteAddress().toString());//lastIP
-						ps.setInt(++i, 1);//isOnline
-						ps.setLong(++i, userID);//userID
-						ps.executeUpdate();
+				int i=0;
+				ps.setString(++i, c.encryptionKey);//encryptionKey
+				ps.setLong(++i, c.startTime);//lastSeenTime
+				ps.setInt(++i, timesLoggedIn);//timesLoggedIn
+				ps.setString(++i, ""+e.getRemoteAddress().toString());//lastIP
+				ps.setInt(++i, 1);//isOnline
+				ps.setLong(++i, userID);//userID
+				ps.executeUpdate();
 
-						ps.close();
+				ps.close();
 
-					}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());}
-					closeDBConnection(databaseConnection);
+			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());closeDBConnection(databaseConnection); return;}
 
-
-					//tell all other servers to close connection if they are logged in, go through channels here and close channel if they are logged in
-					ServerMain.indexClientTCP.send_INDEX_User_Logged_On_This_Server_Log_Them_Off_Other_Servers(c.userID);
+			closeDBConnection(databaseConnection);
 
 
-
-					incomingInitialGameSaveRequest(e);
-
-					sendAllUserStatsGameStatsAndLeaderBoardsToClient(c);
-					//tell friends we are online (happens in friend list request)
-					//send this client online friends list request
-					incomingOnlineFriendsListRequest(e);
-
-					// refresh facebook friends, send online friends list
-					if(c.facebookID.length()>0)
-					{
-						incomingUpdateFacebookAccountInDBRequest(e);
-						//incomingOnlineFriendsListRequest(e);
-					}
+			//tell all other servers to close connection if they are logged in, go through channels here and close channel if they are logged in
+			ServerMain.indexClientTCP.send_INDEX_User_Logged_On_This_Server_Log_Them_Off_Other_Servers(c.userID);
 
 
 
-					//----------------------------------
-					//store stats to dreamhost stats DB
-					//----------------------------------
+			incomingInitialGameSaveRequest(e);
+
+			sendAllUserStatsGameStatsAndLeaderBoardsToClient(c);
+			//tell friends we are online (happens in friend list request)
+			//send this client online friends list request
+			incomingOnlineFriendsListRequest(e);
+
+			// refresh facebook friends, send online friends list
+			if(c.facebookID.length()>0)
+			{
+				//incomingUpdateFacebookAccountInDBRequest(e);
+				//incomingOnlineFriendsListRequest(e);
+			}
+
+
+
+			//----------------------------------
+			//store stats to dreamhost stats DB
+			//----------------------------------
 
 //					ClientStats stats = new ClientStats();
 //
@@ -1831,22 +1852,16 @@ public class GameServerTCP
 //
 //					}
 
-				}
-				else
-				{
+		}
+		else
+		{
 
-					log.debug("Wrong sessionToken for userID:"+userID);
-				}
-			}
-			else
-			{
-				resultSet.close();
-				ps.close();
-				closeDBConnection(databaseConnection);
-			}
+			log.debug("Wrong sessionToken for userID:"+userID);
+		}
 
 
-		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();}
+
+
 
 
 		if(loggedIn==false)
@@ -3134,7 +3149,8 @@ public class GameServerTCP
 	//===============================================================================================
 	public BobsGameClient getClientByChannel(Channel c)
 	{//===============================================================================================
-		return clientsByChannel.get(c);
+		if(clientsByChannel.contains(c))return clientsByChannel.get(c);
+		return null;
 	}
 
 	//===============================================================================================
@@ -4943,11 +4959,14 @@ public class GameServerTCP
 
 		//send new userStats, modified gameStats or created gameStats, and any modified leaderboards
 
+		String batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 
-		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameAnyDifficulty.encode()+BobNet.endline);
-		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameThisDifficulty.encode()+BobNet.endline);
-		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameAnyDifficulty.encode()+BobNet.endline);
-		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameThisDifficulty.encode()+BobNet.endline);
+		batch+=(BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameAnyDifficulty.encode()+BobNet.batch);
+		batch+=(BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameThisDifficulty.encode()+BobNet.batch);
+		batch+=(BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameAnyDifficulty.encode()+BobNet.batch);
+		batch+=(BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameThisDifficulty.encode()+BobNet.batch);
+
+		writeCompressed(c.channel,batch+BobNet.endline);
 
 		if(leaderBoardsModified)
 		{
@@ -4968,11 +4987,14 @@ public class GameServerTCP
 		closeDBConnection(databaseConnection);
 
 
+		String batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 
 		for(int i=0; i<allUserStatsForIndividualGames.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+allUserStatsForIndividualGames.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+allUserStatsForIndividualGames.get(i).encode()+BobNet.batch);
 		}
+
+		writeCompressed(c.channel,batch+BobNet.endline);
 
 		sendAllLeaderBoardsToClient(c);
 
@@ -4993,37 +5015,39 @@ public class GameServerTCP
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameHighScoreBoardsByBlocksCleared = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameHighScoreBoardsByBlocksCleared");
 		closeDBConnection(databaseConnection);
 
+		String batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
+
 		for(int i=0; i<bobsGameLeaderBoardsByTotalTimePlayed.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByTotalTimePlayed+bobsGameLeaderBoardsByTotalTimePlayed.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_LeaderBoardsByTotalTimePlayed+bobsGameLeaderBoardsByTotalTimePlayed.get(i).encode()+BobNet.batch);
 		}
 
 		for(int i=0; i<bobsGameLeaderBoardsByTotalBlocksCleared.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByTotalBlocksCleared+bobsGameLeaderBoardsByTotalBlocksCleared.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_LeaderBoardsByTotalBlocksCleared+bobsGameLeaderBoardsByTotalBlocksCleared.get(i).encode()+BobNet.batch);
 		}
 
 		for(int i=0; i<bobsGameLeaderBoardsByPlaneswalkerPoints.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByPlaneswalkerPoints+bobsGameLeaderBoardsByPlaneswalkerPoints.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_LeaderBoardsByPlaneswalkerPoints+bobsGameLeaderBoardsByPlaneswalkerPoints.get(i).encode()+BobNet.batch);
 		}
 
 		for(int i=0; i<bobsGameLeaderBoardsByEloScore.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByEloScore+bobsGameLeaderBoardsByEloScore.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_LeaderBoardsByEloScore+bobsGameLeaderBoardsByEloScore.get(i).encode()+BobNet.batch);
 		}
 
 		for(int i=0; i<bobsGameHighScoreBoardsByTimeLasted.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_HighScoreBoardsByTimeLasted+bobsGameHighScoreBoardsByTimeLasted.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_HighScoreBoardsByTimeLasted+bobsGameHighScoreBoardsByTimeLasted.get(i).encode()+BobNet.batch);
 		}
 
 		for(int i=0; i<bobsGameHighScoreBoardsByBlocksCleared.size(); i++)
 		{
-			writeCompressed(c.channel,BobNet.Bobs_Game_HighScoreBoardsByBlocksCleared+bobsGameHighScoreBoardsByBlocksCleared.get(i).encode()+BobNet.endline);
+			batch+=(BobNet.Bobs_Game_HighScoreBoardsByBlocksCleared+bobsGameHighScoreBoardsByBlocksCleared.get(i).encode()+BobNet.batch);
 		}
 
-
+		writeCompressed(c.channel,batch+BobNet.endline);
 	}
 
 
@@ -5254,7 +5278,9 @@ public class GameServerTCP
 
 		//MapRequest:name
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		String name = s;
+
 
 		//log.info(""+name);
 
@@ -5282,6 +5308,7 @@ public class GameServerTCP
 		int id = -1;
 		//MapRequest:name
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.mapDataByIDBase64List.get(id);
@@ -5307,6 +5334,7 @@ public class GameServerTCP
 
 		//SpriteRequest:name
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		String name = s;
 
 		if(BobNet.debugMode)log.info(""+name);
@@ -5335,6 +5363,7 @@ public class GameServerTCP
 		int id = -1;
 		//SpriteRequest:name
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.spriteDataByIDBase64List.get(id);
@@ -5361,6 +5390,7 @@ public class GameServerTCP
 		int id = -1;
 		//DialogueRequest:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.dialogueDataByIDBase64List.get(id);
@@ -5390,6 +5420,7 @@ public class GameServerTCP
 		int id = -1;
 		//Flag_Request:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.flagDataByIDBase64List.get(id);
@@ -5413,6 +5444,7 @@ public class GameServerTCP
 		int id = -1;
 		//Skill_Request:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.skillDataByIDBase64List.get(id);
@@ -5477,6 +5509,7 @@ public class GameServerTCP
 		int id = -1;
 		//EventRequest:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.eventDataByIDBase64List.get(id);
@@ -5507,6 +5540,7 @@ public class GameServerTCP
 		int id = -1;
 		//GameStringRequest:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 
@@ -5534,6 +5568,7 @@ public class GameServerTCP
 		int id = -1;
 		//MusicRequest:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 
@@ -5560,6 +5595,7 @@ public class GameServerTCP
 		int id = -1;
 		//SoundRequest:id
 		s = s.substring(s.indexOf(":")+1);
+		if(s.contains(BobNet.endline))s = s.substring(0,s.indexOf(BobNet.endline));
 		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.soundDataByIDBase64List.get(id);
