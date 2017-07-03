@@ -455,7 +455,7 @@ public class GameServerTCP
 			else if(e.getState() == IdleState.WRITER_IDLE)
 			{
 
-				write(e.getChannel(),"ping"+BobNet.endline);
+				writePlaintext(e.getChannel(),"ping"+BobNet.endline);
 
 				log.debug("channelIdle: ping | ChannelID: "+e.getChannel().getId()+" | Client userID: "+id);
 			}
@@ -724,7 +724,7 @@ public class GameServerTCP
 			if(message.startsWith("ping"))
 			{
 				//log.debug("INDEX: ping");
-				write(e.getChannel(),"pong"+BobNet.endline);
+				writePlaintext(e.getChannel(),"pong"+BobNet.endline);
 				return;
 			}
 			if(message.startsWith("pong"))
@@ -853,9 +853,74 @@ public class GameServerTCP
 	}
 
 
+	//===============================================================================================
+	public ArrayList<ChannelFuture> writePlaintext(Channel c, String s)
+	{//===============================================================================================
+
+		ArrayList<ChannelFuture> futures = new ArrayList<ChannelFuture>();
+
+		if(s.endsWith(BobNet.endline)==false)
+		{
+			log.error("Message doesn't end with endline");
+			s = s +BobNet.endline;
+		}
+
+		long id = -1;
+		if(c!=null)
+		{
+			BobsGameClient client = getClientByChannel(c);
+			if(client!=null)id=client.userID;
+		}
+
+
+
+
+
+		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
+
+
+
+
+
+		if(s.length()>1400)
+		{
+			s = s.substring(0,s.indexOf(BobNet.endline));
+
+			while(s.length()>1300)
+			{
+				String partial = "PARTIAL:" + s.substring(0,1300) + BobNet.endline;
+				s = s.substring(1300);
+
+				//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
+
+				futures.add(c.write(partial));
+
+			}
+
+			String finalString = "FINAL:" + s + BobNet.endline;
+
+			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
+
+			futures.add(c.write(finalString));
+
+		}
+		else
+		{
+
+			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
+
+			futures.add(c.write(s));
+
+		}
+
+		return futures;
+
+
+	}
+
 
 	//===============================================================================================
-	public ArrayList<ChannelFuture> write(Channel c, String s)
+	public ArrayList<ChannelFuture> writeCompressed(Channel c, String s)
 	{//===============================================================================================
 
 		ArrayList<ChannelFuture> futures = new ArrayList<ChannelFuture>();
@@ -941,14 +1006,14 @@ public class GameServerTCP
 
 
 
+		log.info("Original size:"+s.length());
 
 		try
 		{
 
-			LZ4Factory factory = LZ4Factory.fastestInstance();
+			LZ4Factory factory = LZ4Factory.safeInstance();
 
-			byte[] data;
-			data=s.getBytes("UTF-8");
+			byte[] data = s.getBytes("UTF-8");
 
 
 			final int decompressedLength = data.length;
@@ -969,7 +1034,7 @@ public class GameServerTCP
 
 
 			String base64 = Base64.encodeBase64String(compressedBytes);
-			s = new String(base64+BobNet.endline);
+			s = new String(base64);
 
 
 		}
@@ -980,37 +1045,37 @@ public class GameServerTCP
 
 
 
-
+		log.info("Compressed size:"+s.length());
 
 
 		if(s.length()>1400)
 		{
-			s = s.substring(0,s.indexOf(BobNet.endline));
+			//s = s.substring(0,s.indexOf(BobNet.endline));
 
 			while(s.length()>1300)
 			{
-				String partial = "PARTIAL:" + s.substring(0,1300) + BobNet.endline;
+				String partial = "PARTIAL:" + s.substring(0,1300);
 				s = s.substring(1300);
 
-				//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
+				log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
 
-				futures.add(c.write(partial));
+				futures.add(c.write(partial + BobNet.endline));
 
 			}
 
-			String finalString = "FINAL:" + s + BobNet.endline;
+			String finalString = "FINAL:" + s;
 
-			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
+			log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
 
-			futures.add(c.write(finalString));
+			futures.add(c.write(finalString + BobNet.endline));
 
 		}
 		else
 		{
 
-			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
+			log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
 
-			futures.add(c.write(s));
+			futures.add(c.write(s+BobNet.endline));
 
 		}
 
@@ -1140,7 +1205,7 @@ public class GameServerTCP
 	{//===============================================================================================
 
 		//ServerIPAddressResponse
-		write(e.getChannel(),BobNet.Server_IP_Address_Response+ServerMain.myIPAddressString+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Server_IP_Address_Response+ServerMain.myIPAddressString+BobNet.endline);
 
 	}
 
@@ -1382,7 +1447,7 @@ public class GameServerTCP
 						//then send the sessionToken back to the client, which sends it with each update and request along with userID.
 						//ArrayList<ChannelFuture> futures =
 
-						write(e.getChannel(),BobNet.Login_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
+						writeCompressed(e.getChannel(),BobNet.Login_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
 
 //						for(int i=0;i<futures.size();i++)
 //						{
@@ -1505,7 +1570,7 @@ public class GameServerTCP
 
 		if(loggedIn==false)
 		{
-			write(e.getChannel(),BobNet.Login_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Login_Response+"Failed"+BobNet.endline);
 			return;
 		}
 
@@ -1678,7 +1743,7 @@ public class GameServerTCP
 					//then send the session token back to the client, which sends it with each update and request along with userID.
 					//ArrayList<ChannelFuture> futures =
 
-					write(e.getChannel(),BobNet.Reconnect_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
+					writeCompressed(e.getChannel(),BobNet.Reconnect_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
 
 //					for(int i=0;i<futures.size();i++)
 //					{
@@ -1786,7 +1851,7 @@ public class GameServerTCP
 
 		if(loggedIn==false)
 		{
-			write(e.getChannel(),BobNet.Reconnect_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Reconnect_Response+"Failed"+BobNet.endline);
 			return;
 		}
 
@@ -2006,7 +2071,7 @@ public class GameServerTCP
 		if(c!=null)
 		{
 			//then send the sessionToken back to the client, which sends it with each update and request along with userID.
-			write(channel,BobNet.Facebook_Login_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
+			writeCompressed(channel,BobNet.Facebook_Login_Response+"Success,"+c.userID+",`"+sessionToken+"`"+BobNet.endline);
 			return 1;
 		}
 
@@ -2068,7 +2133,7 @@ public class GameServerTCP
 		{
 			log.error("Error logging into facebook and getting facebook email for facebookID: "+facebookID+" fbAccessToken: "+facebookAccessToken+" "+ex.getMessage());
 
-			write(e.getChannel(),BobNet.Facebook_Login_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Facebook_Login_Response+"Failed"+BobNet.endline);
 
 			ex.printStackTrace();
 			return;
@@ -2100,7 +2165,7 @@ public class GameServerTCP
 			//there was an error, send failed.
 			log.error("Facebook_Login_Response FacebookID: "+facebookID+" facebookAccessToken:"+facebookAccessToken);
 
-			write(e.getChannel(),BobNet.Facebook_Login_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Facebook_Login_Response+"Failed"+BobNet.endline);
 
 		}
 		if(status==0)
@@ -2395,7 +2460,7 @@ public class GameServerTCP
 
 
 
-		write(e.getChannel(),BobNet.Password_Recovery_Response+"Done"+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Password_Recovery_Response+"Done"+BobNet.endline);
 
 	}
 
@@ -2483,7 +2548,7 @@ public class GameServerTCP
 
 		if(userNameExists)
 		{
-			write(e.getChannel(),BobNet.Create_Account_Response+"UserNameTaken"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Create_Account_Response+"UserNameTaken"+BobNet.endline);
 			closeDBConnection(databaseConnection);
 			return;
 		}
@@ -2651,7 +2716,7 @@ public class GameServerTCP
 
 		closeDBConnection(databaseConnection);
 
-		write(e.getChannel(),BobNet.Create_Account_Response+"Success"+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Create_Account_Response+"Success"+BobNet.endline);
 
 		int year = Calendar.getInstance().get(Calendar.YEAR);
 		int month = Calendar.getInstance().get(Calendar.MONTH)+1;
@@ -3185,8 +3250,8 @@ public class GameServerTCP
 			String gameSave = g.encodeGameSave();
 			String encryptedGameSave = encryptGameSave(c,g);
 
-			write(e.getChannel(),BobNet.Initial_GameSave_Response+gameSave+BobNet.endline);
-			write(e.getChannel(),BobNet.Encrypted_GameSave_Update_Response+"-1,"+encryptedGameSave+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Initial_GameSave_Response+gameSave+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Encrypted_GameSave_Update_Response+"-1,"+encryptedGameSave+BobNet.endline);
 		}
 	}
 
@@ -3282,7 +3347,7 @@ public class GameServerTCP
 		String updatedEncryptedGameSave = encryptGameSave(c,g);
 
 		//send back to client
-		write(e.getChannel(),BobNet.Encrypted_GameSave_Update_Response+gameSaveID+","+updatedEncryptedGameSave+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Encrypted_GameSave_Update_Response+gameSaveID+","+updatedEncryptedGameSave+BobNet.endline);
 
 
 		//now update the DB
@@ -3402,7 +3467,7 @@ public class GameServerTCP
 		{
 			//TODO: if couldnt get results from DB query google API and yahoo API
 			//TODO: if still can't get results, send back ERROR
-			write(e.getChannel(),BobNet.Postal_Code_Update_Response+"ERROR"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Postal_Code_Update_Response+"ERROR"+BobNet.endline);
 			return;
 		}
 
@@ -3423,7 +3488,7 @@ public class GameServerTCP
 		String updatedEncryptedGameSave = encryptGameSave(c,g);
 
 		//PostalCodeUpdateResponse:isoCountryCode,`postalCode`,`placeName`,`stateName`,`lat`,`lon`,encryptedGameSave
-		write(e.getChannel(),BobNet.Postal_Code_Update_Response+isoCountryCode+",`"+postalCode+"`,`"+placeName+"`,`"+stateName+"`,`"+lat+"`,`"+lon+"`,"+updatedEncryptedGameSave+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Postal_Code_Update_Response+isoCountryCode+",`"+postalCode+"`,`"+placeName+"`,`"+stateName+"`,`"+lat+"`,`"+lon+"`,"+updatedEncryptedGameSave+BobNet.endline);
 
 
 
@@ -3557,7 +3622,7 @@ public class GameServerTCP
 		//send back fail if we don't have a token yet.
 		if(facebookAccessToken.length()==0)
 		{
-			write(e.getChannel(),BobNet.Update_Facebook_Account_In_DB_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Update_Facebook_Account_In_DB_Response+"Failed"+BobNet.endline);
 			return;
 		}
 
@@ -3592,7 +3657,7 @@ public class GameServerTCP
 
 			//access token was bad.
 			//send back failure message
-			write(e.getChannel(),BobNet.Update_Facebook_Account_In_DB_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Update_Facebook_Account_In_DB_Response+"Failed"+BobNet.endline);
 
 			//remove bad token from database.
 			Connection databaseConnection = openAccountsDBOnAmazonRDS();
@@ -3661,7 +3726,7 @@ public class GameServerTCP
 					long userID_DB = resultSet.getLong("userID");
 					if(userID!=userID_DB)
 					{
-						write(e.getChannel(),BobNet.Update_Facebook_Account_In_DB_Response+"FailedIDAlreadyExists"+BobNet.endline);
+						writeCompressed(e.getChannel(),BobNet.Update_Facebook_Account_In_DB_Response+"FailedIDAlreadyExists"+BobNet.endline);
 						return;
 					}
 				}
@@ -3759,7 +3824,7 @@ public class GameServerTCP
 
 		closeDBConnection(databaseConnection);
 
-		write(e.getChannel(),
+		writeCompressed(e.getChannel(),
 								BobNet.Update_Facebook_Account_In_DB_Response+"Success:`"+
 								facebookID+"`,`"+
 								facebookAccessToken+"`,`"+
@@ -3847,7 +3912,7 @@ public class GameServerTCP
 
 		if(userNameFriendsCSV.startsWith(friendUserName+",") || userNameFriendsCSV.contains(","+friendUserName+",") || friendUserName.equals(userName))
 		{
-			write(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Success"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Success"+BobNet.endline);
 			closeDBConnection(databaseConnection);
 			return;
 		}
@@ -3879,14 +3944,14 @@ public class GameServerTCP
 
 		if(friendUserID==0)
 		{
-			write(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Failed"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Failed"+BobNet.endline);
 			closeDBConnection(databaseConnection);
 			return;
 		}
 
 		if(friendUserID==userID)
 		{
-			write(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Success"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Success"+BobNet.endline);
 			closeDBConnection(databaseConnection);
 			return;
 		}
@@ -3955,7 +4020,7 @@ public class GameServerTCP
 
 		}
 
-		write(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Success"+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Add_Friend_By_UserName_Response+"Success"+BobNet.endline);
 
 		//we should alert them all that we are online.
 		ServerMain.indexClientTCP.send_INDEX_Tell_All_Servers_To_Tell_UserNames_That_UserID_Is_Online(userID,userNameFriendsCSV);
@@ -3982,14 +4047,14 @@ public class GameServerTCP
 
 
 				//notify friend we are online, they start pinging the stun server.
-				write(friendClient.channel,BobNet.Friend_Is_Online_Notification+type+":"+userID+BobNet.endline);
+				writeCompressed(friendClient.channel,BobNet.Friend_Is_Online_Notification+type+":"+userID+BobNet.endline);
 			}
 
 		}
 
 		//now we have a list of friends userIDs that are online right now.
 		//send our list to our client which should start pinging all of the IPs to make connections.
-		write(e.getChannel(),BobNet.Online_Friends_List_Response+onlineFriendUserIDsCSV+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Online_Friends_List_Response+onlineFriendUserIDsCSV+BobNet.endline);
 
 	}
 
@@ -4137,7 +4202,7 @@ public class GameServerTCP
 					downVotes+":"+
 					userVote+":";
 
-					write(e.getChannel(),message+BobNet.endline);
+					writeCompressed(e.getChannel(),message+BobNet.endline);
 
 				}
 				resultSet.close();
@@ -4200,7 +4265,7 @@ public class GameServerTCP
 		else
 		{
 			log.error("Could not parse type on incomingGameUpload: "+type+","+name+","+uuid);
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Could not parse data, please try again."+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Could not parse data, please try again."+BobNet.endline);
 			return;
 		}
 
@@ -4255,7 +4320,7 @@ public class GameServerTCP
 			if(lastUserID!=userID)
 			{
 
-				write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Already exists on server and you are not the creator."+BobNet.endline);
+				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Already exists on server and you are not the creator."+BobNet.endline);
 				closeDBConnection(databaseConnection);
 				return;
 			}
@@ -4284,7 +4349,7 @@ public class GameServerTCP
 
 			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();}
 
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Success: Updated on server."+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Success: Updated on server."+BobNet.endline);
 			closeDBConnection(databaseConnection);
 		}
 		else
@@ -4322,14 +4387,14 @@ public class GameServerTCP
 
 			if(lastCreatedGameTime==-1)
 			{
-				write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Could not get last created time."+BobNet.endline);
+				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Could not get last created time."+BobNet.endline);
 				closeDBConnection(databaseConnection);
 				return;
 			}
 
 			if(System.currentTimeMillis() < lastCreatedGameTime + 1000 * 60 * 10)//10 minutes
 			{
-				write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Created too soon, only once every 10 minutes."+BobNet.endline);
+				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Created too soon, only once every 10 minutes."+BobNet.endline);
 				closeDBConnection(databaseConnection);
 				return;
 			}
@@ -4378,7 +4443,7 @@ public class GameServerTCP
 				ps.close();
 			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();}
 
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Success: Created"+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Success: Created"+BobNet.endline);
 			closeDBConnection(databaseConnection);
 		}
 
@@ -4417,7 +4482,7 @@ public class GameServerTCP
 
 		if(upOrDownString.equals("up")==false && upOrDownString.equals("down")==false)
 		{
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Vote string was not valid."+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Vote string was not valid."+BobNet.endline);
 			return;
 		}
 
@@ -4434,7 +4499,7 @@ public class GameServerTCP
 		else
 		{
 			log.error("Could not parse incomingGameVote: "+type+","+uuid+","+upOrDownString);
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not parse data, please try again."+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not parse data, please try again."+BobNet.endline);
 			return;
 		}
 
@@ -4492,7 +4557,7 @@ public class GameServerTCP
 			boolean upOrDown = false;
 			try{upOrDown = Boolean.parseBoolean(upOrDownString);}catch(Exception ex)
 			{
-				write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not parse vote."+BobNet.endline);
+				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not parse vote."+BobNet.endline);
 				closeDBConnection(databaseConnection);
 				return;
 			}
@@ -4525,7 +4590,7 @@ public class GameServerTCP
 
 			if((lastVote.equals("up") && upOrDown==true) || (lastVote.equals("down") && upOrDown==false))
 			{
-				write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Already voted "+lastVote+"!"+BobNet.endline);
+				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Already voted "+lastVote+"!"+BobNet.endline);
 				closeDBConnection(databaseConnection);
 				return;
 			}
@@ -4556,13 +4621,13 @@ public class GameServerTCP
 
 			String message = "Success: Thank you for voting!";
 			if(changedVote)message = "Success: You have changed your vote.";
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+message+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+message+BobNet.endline);
 			closeDBConnection(databaseConnection);
 		}
 		else
 		{
 
-			write(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not find game in database."+BobNet.endline);
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not find game in database."+BobNet.endline);
 			closeDBConnection(databaseConnection);
 		}
 
@@ -4609,7 +4674,7 @@ public class GameServerTCP
 		}
 
 
-		write(e.getChannel(),BobNet.Bobs_Game_RoomList_Response+s+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Bobs_Game_RoomList_Response+s+BobNet.endline);
 
 	}
 
@@ -4879,10 +4944,10 @@ public class GameServerTCP
 		//send new userStats, modified gameStats or created gameStats, and any modified leaderboards
 
 
-		write(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameAnyDifficulty.encode()+BobNet.endline);
-		write(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameThisDifficulty.encode()+BobNet.endline);
-		write(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameAnyDifficulty.encode()+BobNet.endline);
-		write(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameThisDifficulty.encode()+BobNet.endline);
+		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameAnyDifficulty.encode()+BobNet.endline);
+		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForAnyGameThisDifficulty.encode()+BobNet.endline);
+		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameAnyDifficulty.encode()+BobNet.endline);
+		writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+userStatsForThisGameThisDifficulty.encode()+BobNet.endline);
 
 		if(leaderBoardsModified)
 		{
@@ -4906,7 +4971,7 @@ public class GameServerTCP
 
 		for(int i=0; i<allUserStatsForIndividualGames.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+allUserStatsForIndividualGames.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_UserStatsForSpecificGameAndDifficulty+allUserStatsForIndividualGames.get(i).encode()+BobNet.endline);
 		}
 
 		sendAllLeaderBoardsToClient(c);
@@ -4930,32 +4995,32 @@ public class GameServerTCP
 
 		for(int i=0; i<bobsGameLeaderBoardsByTotalTimePlayed.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_LeaderBoardsByTotalTimePlayed+bobsGameLeaderBoardsByTotalTimePlayed.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByTotalTimePlayed+bobsGameLeaderBoardsByTotalTimePlayed.get(i).encode()+BobNet.endline);
 		}
 
 		for(int i=0; i<bobsGameLeaderBoardsByTotalBlocksCleared.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_LeaderBoardsByTotalBlocksCleared+bobsGameLeaderBoardsByTotalBlocksCleared.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByTotalBlocksCleared+bobsGameLeaderBoardsByTotalBlocksCleared.get(i).encode()+BobNet.endline);
 		}
 
 		for(int i=0; i<bobsGameLeaderBoardsByPlaneswalkerPoints.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_LeaderBoardsByPlaneswalkerPoints+bobsGameLeaderBoardsByPlaneswalkerPoints.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByPlaneswalkerPoints+bobsGameLeaderBoardsByPlaneswalkerPoints.get(i).encode()+BobNet.endline);
 		}
 
 		for(int i=0; i<bobsGameLeaderBoardsByEloScore.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_LeaderBoardsByEloScore+bobsGameLeaderBoardsByEloScore.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_LeaderBoardsByEloScore+bobsGameLeaderBoardsByEloScore.get(i).encode()+BobNet.endline);
 		}
 
 		for(int i=0; i<bobsGameHighScoreBoardsByTimeLasted.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_HighScoreBoardsByTimeLasted+bobsGameHighScoreBoardsByTimeLasted.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_HighScoreBoardsByTimeLasted+bobsGameHighScoreBoardsByTimeLasted.get(i).encode()+BobNet.endline);
 		}
 
 		for(int i=0; i<bobsGameHighScoreBoardsByBlocksCleared.size(); i++)
 		{
-			write(c.channel,BobNet.Bobs_Game_HighScoreBoardsByBlocksCleared+bobsGameHighScoreBoardsByBlocksCleared.get(i).encode()+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Bobs_Game_HighScoreBoardsByBlocksCleared+bobsGameHighScoreBoardsByBlocksCleared.get(i).encode()+BobNet.endline);
 		}
 
 
@@ -4972,7 +5037,7 @@ public class GameServerTCP
 		if(c!=null)
 		{
 			//write(c.channel,BobNet.Online_Friends_List_Response+userIDWhichIsOnline+","+BobNet.endline);
-			write(c.channel,BobNet.Friend_Is_Online_Notification+"anon"+":"+userIDWhichIsOnline+BobNet.endline);
+			writeCompressed(c.channel,BobNet.Friend_Is_Online_Notification+"anon"+":"+userIDWhichIsOnline+BobNet.endline);
 		}
 		else
 		{
@@ -5098,7 +5163,7 @@ public class GameServerTCP
 
 
 				//notify friend we are online, they start pinging the stun server.
-				write(friendClient.channel,BobNet.Friend_Is_Online_Notification+type+":"+userID+BobNet.endline);
+				writeCompressed(friendClient.channel,BobNet.Friend_Is_Online_Notification+type+":"+userID+BobNet.endline);
 			}
 
 		}
@@ -5119,14 +5184,14 @@ public class GameServerTCP
 
 
 				//notify friend we are online, they start pinging the stun server.
-				write(friendClient.channel,BobNet.Friend_Is_Online_Notification+type+":"+userID+BobNet.endline);
+				writeCompressed(friendClient.channel,BobNet.Friend_Is_Online_Notification+type+":"+userID+BobNet.endline);
 			}
 
 		}
 
 		//now we have a list of friends userIDs that are online right now.
 		//send our list to our client which should start pinging all of the IPs to make connections.
-		write(e.getChannel(),BobNet.Online_Friends_List_Response+onlineFriendUserIDsCSV+BobNet.endline);
+		writeCompressed(e.getChannel(),BobNet.Online_Friends_List_Response+onlineFriendUserIDsCSV+BobNet.endline);
 
 	}
 
@@ -5306,7 +5371,7 @@ public class GameServerTCP
 
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.Dialogue_Response+
 					id+"-"+
 					name+":"+
@@ -5331,7 +5396,7 @@ public class GameServerTCP
 		String name = AssetDataIndex.flagDataGetNameByIDList.get(id);
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.Flag_Response+
 					id+"-"+
 					name+":"+
@@ -5354,7 +5419,7 @@ public class GameServerTCP
 		String name = AssetDataIndex.skillDataGetNameByIDList.get(id);
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.Skill_Response+
 					id+"-"+
 					name+":"+
@@ -5384,7 +5449,7 @@ public class GameServerTCP
 
 			if(b64!=null)
 			{
-				write(e.getChannel(),
+				writeCompressed(e.getChannel(),
 						BobNet.Load_Event_Response+
 						id+"-"+
 						name+":"+
@@ -5419,7 +5484,7 @@ public class GameServerTCP
 
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.Event_Response+
 					id+"-"+
 					name+":"+
@@ -5450,7 +5515,7 @@ public class GameServerTCP
 
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.GameString_Response+
 					id+":"+
 					b64+
@@ -5477,7 +5542,7 @@ public class GameServerTCP
 
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.Music_Response+
 					id+"-"+
 					name+":"+
@@ -5502,7 +5567,7 @@ public class GameServerTCP
 
 		if(b64!=null)
 		{
-			write(e.getChannel(),
+			writeCompressed(e.getChannel(),
 					BobNet.Sound_Response+
 					id+"-"+
 					name+":"+

@@ -304,7 +304,7 @@ public class ServerMain
 
 
 
-		String s = "Server_IP_Address_Response:34.201.250.43"+BobNet.endline;
+		//String s = "Server_IP_Address_Response:34.201.250.43"+BobNet.endline;
 
 		//s = "a really long test string with repeating words to test. a really long test string with repeating words to test. a really long test string with repeating words to test.";
 //
