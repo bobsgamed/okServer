@@ -217,7 +217,7 @@ public class GameServerTCP
 		try
 		{
 			//load the database driver
-			Class.forName("com.mysql.cj.jdbc.Driver");
+			Class.forName("com.mysql.jdbc.Driver");
 		}
 		catch (Exception e)
 		{
@@ -229,7 +229,7 @@ public class GameServerTCP
 		{
 
 			amazonRDSConnectionPool = new ComboPooledDataSource();
-			amazonRDSConnectionPool.setDriverClass( "com.mysql.cj.jdbc.Driver" ); //loads the jdbc driver
+			amazonRDSConnectionPool.setDriverClass( "com.mysql.jdbc.Driver" ); //loads the jdbc driver
 			amazonRDSConnectionPool.setJdbcUrl(PrivateCredentials.AMAZON_RDS_URL);
 			amazonRDSConnectionPool.setUser(PrivateCredentials.AMAZON_RDS_USERNAME);
 			amazonRDSConnectionPool.setPassword(PrivateCredentials.AMAZON_RDS_PASSWORD);
@@ -253,7 +253,7 @@ public class GameServerTCP
 
 
 			dreamhostSQLConnectionPool = new ComboPooledDataSource();
-			dreamhostSQLConnectionPool.setDriverClass( "com.mysql.cj.jdbc.Driver" ); //loads the jdbc driver
+			dreamhostSQLConnectionPool.setDriverClass( "com.mysql.jdbc.Driver" ); //loads the jdbc driver
 			dreamhostSQLConnectionPool.setJdbcUrl(PrivateCredentials.DREAMHOST_SQL_URL);
 			dreamhostSQLConnectionPool.setUser(PrivateCredentials.DREAMHOST_SQL_USERNAME);
 			dreamhostSQLConnectionPool.setPassword(PrivateCredentials.DREAMHOST_SQL_PASSWORD);
@@ -399,7 +399,7 @@ public class GameServerTCP
 
 		public TimeOutChannelPipelineFactory(Timer timer)
 		{
-			this.idleStateHandler = new IdleStateHandler(timer, 30, 10, 0); // timer must be shared.
+			this.idleStateHandler = new IdleStateHandler(timer, 30, 30, 30); // timer must be shared.
 		}
 
 		public ChannelPipeline getPipeline() throws Exception
@@ -714,7 +714,7 @@ public class GameServerTCP
 				BobsGameClient client = getClientByChannel(e.getChannel());
 				if(client!=null)clientUserID=client.userID;
 
-				if(message.indexOf("Login")!=-1 && message.indexOf("Reconnect") != -1)
+				if(message.indexOf("Login")!=-1 || message.indexOf("Reconnect") != -1)
 					log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message.substring(0, message.indexOf(":")+1));
 				else log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message);
 
@@ -877,7 +877,7 @@ public class GameServerTCP
 
 
 
-		if(s.indexOf("Login")!=-1 && s.indexOf("Reconnect") != -1)
+		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1)
 		log.debug("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0, s.indexOf(":")+1));
 		else
 		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
@@ -1005,7 +1005,7 @@ public class GameServerTCP
 //
 
 
-		if(s.indexOf("Login")!=-1 && s.indexOf("Reconnect") != -1)
+		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1)
 		log.debug("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0, s.indexOf(":")+1));
 		else
 		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
@@ -1051,7 +1051,7 @@ public class GameServerTCP
 
 
 		int compSize = s.length();
-		log.info("Compressed "+origSize+" to "+compSize+" - "+((float)(compSize/origSize))*100);
+		log.info("Compressed "+origSize+" to "+compSize+" - "+((float)((float)compSize/(float)origSize))*100);
 
 
 		if(s.length()>1400)
