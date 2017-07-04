@@ -718,7 +718,7 @@ public class GameServerTCP
 				BobsGameClient client = getClientByChannel(e.getChannel());
 				if(client!=null)clientUserID=client.userID;
 
-				if(message.indexOf("Login")!=-1 || message.indexOf("Reconnect") != -1)
+				if(message.indexOf("Login")!=-1 || message.indexOf("Reconnect") != -1 || message.indexOf("Create_Account") != -1)
 					log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message.substring(0, message.indexOf(":")+1));
 				else log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message);
 
@@ -881,7 +881,7 @@ public class GameServerTCP
 
 
 
-		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1)
+		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1 || s.indexOf("Create_Account") != -1)
 		log.debug("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0, s.indexOf(":")+1));
 		else
 		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
@@ -1009,7 +1009,7 @@ public class GameServerTCP
 //
 
 
-		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1)
+		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1 || s.indexOf("Create_Account") != -1)
 		log.debug("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0, s.indexOf(":")+1));
 		else
 		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
