@@ -714,7 +714,9 @@ public class GameServerTCP
 				BobsGameClient client = getClientByChannel(e.getChannel());
 				if(client!=null)clientUserID=client.userID;
 
-				log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message);
+				if(message.indexOf("Login")!=-1 && message.indexOf("Reconnect") != -1)
+					log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message.substring(0, message.indexOf(":")+1));
+				else log.debug("FROM CLIENT: cID:"+e.getChannel().getId()+" uID:"+clientUserID+" | "+message);
 
 				//log.debug("ChannelHandlerContext getChannel:"+ctx.getChannel().getId());
 				//log.debug("MessageEvent getChannel:"+e.getChannel().getId());
@@ -875,7 +877,9 @@ public class GameServerTCP
 
 
 
-
+		if(s.indexOf("Login")!=-1 && s.indexOf("Reconnect") != -1)
+		log.debug("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0, s.indexOf(":")+1));
+		else
 		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
 
 
@@ -1001,12 +1005,14 @@ public class GameServerTCP
 //
 
 
-
+		if(s.indexOf("Login")!=-1 && s.indexOf("Reconnect") != -1)
+		log.debug("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0, s.indexOf(":")+1));
+		else
 		log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
 
 
 
-		log.info("Original size:"+s.length());
+		int origSize = s.length();
 
 		try
 		{
@@ -1044,8 +1050,8 @@ public class GameServerTCP
 		}
 
 
-
-		log.info("Compressed size:"+s.length());
+		int compSize = s.length();
+		log.info("Compressed "+origSize+" to "+compSize+" - "+((float)(compSize/origSize))*100);
 
 
 		if(s.length()>1400)
@@ -1057,7 +1063,7 @@ public class GameServerTCP
 				String partial = "PARTIAL:" + s.substring(0,1300);
 				s = s.substring(1300);
 
-				log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
+				//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+partial.substring(0,100)+"...");
 
 				futures.add(c.write(partial + BobNet.endline));
 
@@ -1065,7 +1071,7 @@ public class GameServerTCP
 
 			String finalString = "FINAL:" + s;
 
-			log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
+			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+finalString.substring(0,Math.min(100,finalString.length()-2))+"...");
 
 			futures.add(c.write(finalString + BobNet.endline));
 
@@ -1073,7 +1079,7 @@ public class GameServerTCP
 		else
 		{
 
-			log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
+			//log.info("SEND CLIENT: cID:"+c.getId()+" uID:"+id+" | "+s.substring(0,s.length()-2));
 
 			futures.add(c.write(s+BobNet.endline));
 
