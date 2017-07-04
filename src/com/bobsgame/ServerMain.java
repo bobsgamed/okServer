@@ -129,6 +129,13 @@ public class ServerMain
 	{//===============================================================================================
 
 
+		File f = new File("/localServer");
+		if(f.exists())
+		{
+			
+			
+		}
+
 		BasicConfigurator.configure();
 
 		Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);

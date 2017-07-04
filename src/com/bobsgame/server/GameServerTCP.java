@@ -196,8 +196,12 @@ public class GameServerTCP
 
 		//tcpServerBootstrap.setOption("broadcast", "true");
 
+
+		int serverPort = BobNet.serverTCPPort;
+		if(new File("/localServer").exists())serverPort++;
+
 		// Bind and start to accept incoming connections.
-		tcpChannel = tcpServerBootstrap.bind(new InetSocketAddress(BobNet.serverTCPPort));
+		tcpChannel = tcpServerBootstrap.bind(new InetSocketAddress(serverPort));
 
 
 		log.info("Server TCP ChannelID: "+tcpChannel.getId().toString());
