@@ -79,8 +79,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					DialogueData data = new DialogueData();
-					data.initFromString(s);
+					DialogueData data = DialogueData.fromJSON(s);
 
 					if(data.name()==null)data.setName("Dialogue"+data.id());
 
@@ -137,8 +136,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					EventData eventAsset = new EventData();
-					eventAsset.initFromString(s);
+					EventData eventAsset = EventData.fromJSON(s);
 
 					if(eventAsset.type()==EventData.TYPE_PROJECT_INITIAL_LOADER)
 					{
@@ -197,8 +195,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					FlagData flagAsset = new FlagData();
-					flagAsset.initFromString(s);
+					FlagData flagAsset = FlagData.fromJSON(s);
 
 					flagDataList.put(flagAsset.name(),flagAsset);
 					flagDataBase64List.put(flagAsset.name(),s);
@@ -251,8 +248,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					GameStringData gameStringAsset = new GameStringData();
-					gameStringAsset.initFromString(s);
+					GameStringData gameStringAsset = GameStringData.fromJSON(s);
 
 					gameStringDataList.put(gameStringAsset.name(),gameStringAsset);
 					gameStringDataBase64List.put(gameStringAsset.name(),s);
@@ -309,8 +305,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					MapData mapData = new MapData();
-					mapData.initFromString(s);
+					MapData mapData = MapData.fromJSON(s);
 
 					mapDataList.put(mapData.name(),mapData);
 					mapDataBase64List.put(mapData.name(),s);
@@ -430,8 +425,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					MusicData musicAsset = new MusicData();
-					musicAsset.initFromString(s);
+					MusicData musicAsset = MusicData.fromJSON(s);
 
 					musicDataList.put(musicAsset.name(),musicAsset);
 					musicDataBase64List.put(musicAsset.name(),s);
@@ -487,8 +481,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					SkillData skillAsset = new SkillData();
-					skillAsset.initFromString(s);
+					SkillData skillAsset = SkillData.fromJSON(s);
 
 
 					skillDataList.put(skillAsset.name(),skillAsset);
@@ -545,8 +538,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					SoundData soundAsset = new SoundData();
-					soundAsset.initFromString(s);
+					SoundData soundAsset = SoundData.fromJSON(s);
 
 					soundDataList.put(soundAsset.name(),soundAsset);
 					soundDataBase64List.put(soundAsset.name(),s);
@@ -598,8 +590,7 @@ public class AssetDataIndex
 
 				if(s.length()>0)
 				{
-					SpriteData spriteAsset = new SpriteData();
-					spriteAsset.initFromString(s);
+					SpriteData spriteAsset = SpriteData.fromJSON(s);
 
 					spriteDataList.put(spriteAsset.name(),spriteAsset);
 					spriteDataBase64List.put(spriteAsset.name(),s);

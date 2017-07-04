@@ -1,5 +1,6 @@
 package com.bobsgame.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -102,7 +103,16 @@ public class IndexClientTCP
 		clientBootstrap.setOption("tcpNoDelay", true);
 		clientBootstrap.setOption("keepAlive", true);
 
-		clientBootstrap.setOption("remoteAddress", new InetSocketAddress(ServerMain.INDEXServerAddress, BobNet.INDEXServerTCPPort));
+
+		int serverPort = BobNet.INDEXServerTCPPort;
+		String serverAddress = ServerMain.INDEXServerAddress;
+		if(new File("/localServer").exists())
+		{
+			serverPort++;
+			serverAddress = "127.0.0.1";
+		}
+
+		clientBootstrap.setOption("remoteAddress", new InetSocketAddress(serverAddress, serverPort));
 
 
 
