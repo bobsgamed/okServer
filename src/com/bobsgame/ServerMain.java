@@ -46,7 +46,7 @@ import javax.swing.WindowConstants;
 import javax.swing.text.StyledDocument;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.compress.compressors.deflate.DeflateCompressorOutputStream;
+
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
