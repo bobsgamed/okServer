@@ -108,7 +108,7 @@ public class IndexClientTCP
 		String serverAddress = ServerMain.INDEXServerAddress;
 		if(new File("/localServer").exists())
 		{
-			serverPort++;
+			//serverPort++;
 			serverAddress = "127.0.0.1";
 		}
 

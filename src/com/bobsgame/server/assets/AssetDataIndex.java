@@ -31,11 +31,11 @@ public class AssetDataIndex
 	public static Logger log = (Logger) LoggerFactory.getLogger(AssetDataIndex.class);
 
 
-	static public ConcurrentHashMap<String,DialogueData> dialogueDataList = new ConcurrentHashMap<String,DialogueData>();
-	static public ConcurrentHashMap<String,String> dialogueDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> dialogueDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
-	static public ConcurrentHashMap<String,Integer> dialogueDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
-	static public ConcurrentHashMap<Integer,String> dialogueDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,DialogueData> dialogueDataList = new ConcurrentHashMap<Integer,DialogueData>();
+	//static public ConcurrentHashMap<String,String> dialogueDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> dialogueDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	//static public ConcurrentHashMap<String,Integer> dialogueDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
+	//static public ConcurrentHashMap<Integer,String> dialogueDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
 
 	//===============================================================================================
@@ -83,11 +83,11 @@ public class AssetDataIndex
 
 					if(data.name()==null)data.setName("Dialogue"+data.id());
 
-					dialogueDataList.put(data.name(),data);
-					dialogueDataBase64List.put(data.name(),s);
-					dialogueDataByIDBase64List.put(data.id(),s);
-					dialogueDataGetIDByNameList.put(data.name(),data.id());
-					dialogueDataGetNameByIDList.put(data.id(),data.name());
+					dialogueDataList.put(data.id(),data);
+					//dialogueDataBase64List.put(data.name(),s);
+					//dialogueDataByIDBase64List.put(data.id(),s);
+					//dialogueDataGetIDByNameList.put(data.name(),data.id());
+					//dialogueDataGetNameByIDList.put(data.id(),data.name());
 
 
 					log.debug("Loaded Dialogue: "+data.name());
@@ -102,11 +102,11 @@ public class AssetDataIndex
 
 	static public int loadEventID = -1;
 
-	static public ConcurrentHashMap<String,EventData> eventDataList = new ConcurrentHashMap<String,EventData>();
-	static public ConcurrentHashMap<String,String> eventDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> eventDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
-	static public ConcurrentHashMap<String,Integer> eventDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
-	static public ConcurrentHashMap<Integer,String> eventDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,EventData> eventDataList = new ConcurrentHashMap<Integer,EventData>();
+	//static public ConcurrentHashMap<String,String> eventDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> eventDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	//static public ConcurrentHashMap<String,Integer> eventDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
+	//static public ConcurrentHashMap<Integer,String> eventDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
 
 
@@ -144,11 +144,11 @@ public class AssetDataIndex
 						log.info("Found project load event:"+eventAsset.id());
 					}
 
-					eventDataList.put(eventAsset.name(),eventAsset);
-					eventDataBase64List.put(eventAsset.name(),s);
-					eventDataByIDBase64List.put(eventAsset.id(),s);
-					eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
-					eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+					eventDataList.put(eventAsset.id(),eventAsset);
+					//eventDataBase64List.put(eventAsset.name(),s);
+					//eventDataByIDBase64List.put(eventAsset.id(),s);
+					//eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
+					//eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 
 					log.debug("Loaded Cutscene Event: "+eventAsset.name());
@@ -162,11 +162,11 @@ public class AssetDataIndex
 
 
 
-	static public ConcurrentHashMap<String,FlagData> flagDataList = new ConcurrentHashMap<String,FlagData>();
-	static public ConcurrentHashMap<String,String> flagDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> flagDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
-	static public ConcurrentHashMap<String,Integer> flagDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
-	static public ConcurrentHashMap<Integer,String> flagDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,FlagData> flagDataList = new ConcurrentHashMap<Integer,FlagData>();
+	//static public ConcurrentHashMap<String,String> flagDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> flagDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	//static public ConcurrentHashMap<String,Integer> flagDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
+	//static public ConcurrentHashMap<Integer,String> flagDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
 
 
@@ -197,11 +197,11 @@ public class AssetDataIndex
 				{
 					FlagData flagAsset = FlagData.fromJSON(s);
 
-					flagDataList.put(flagAsset.name(),flagAsset);
-					flagDataBase64List.put(flagAsset.name(),s);
-					flagDataByIDBase64List.put(flagAsset.id(),s);
-					flagDataGetIDByNameList.put(flagAsset.name(),flagAsset.id());
-					flagDataGetNameByIDList.put(flagAsset.id(),flagAsset.name());
+					flagDataList.put(flagAsset.id(),flagAsset);
+					//flagDataBase64List.put(flagAsset.name(),s);
+					//flagDataByIDBase64List.put(flagAsset.id(),s);
+					//flagDataGetIDByNameList.put(flagAsset.name(),flagAsset.id());
+					//flagDataGetNameByIDList.put(flagAsset.id(),flagAsset.name());
 
 
 					log.debug("Loaded Flag: "+flagAsset.name());
@@ -215,11 +215,11 @@ public class AssetDataIndex
 
 
 
-	static public ConcurrentHashMap<String,GameStringData> gameStringDataList = new ConcurrentHashMap<String,GameStringData>();
-	static public ConcurrentHashMap<String,String> gameStringDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> gameStringDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
-	static public ConcurrentHashMap<String,Integer> gameStringDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
-	static public ConcurrentHashMap<Integer,String> gameStringDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,GameStringData> gameStringDataList = new ConcurrentHashMap<Integer,GameStringData>();
+	//static public ConcurrentHashMap<String,String> gameStringDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> gameStringDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	//static public ConcurrentHashMap<String,Integer> gameStringDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
+	//static public ConcurrentHashMap<Integer,String> gameStringDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
 
 
@@ -250,11 +250,11 @@ public class AssetDataIndex
 				{
 					GameStringData gameStringAsset = GameStringData.fromJSON(s);
 
-					gameStringDataList.put(gameStringAsset.name(),gameStringAsset);
-					gameStringDataBase64List.put(gameStringAsset.name(),s);
-					gameStringDataByIDBase64List.put(gameStringAsset.id(),s);
-					gameStringDataGetIDByNameList.put(gameStringAsset.name(),gameStringAsset.id());
-					gameStringDataGetNameByIDList.put(gameStringAsset.id(),gameStringAsset.name());
+					gameStringDataList.put(gameStringAsset.id(),gameStringAsset);
+					//gameStringDataBase64List.put(gameStringAsset.name(),s);
+					//gameStringDataByIDBase64List.put(gameStringAsset.id(),s);
+					//gameStringDataGetIDByNameList.put(gameStringAsset.name(),gameStringAsset.id());
+					//gameStringDataGetNameByIDList.put(gameStringAsset.id(),gameStringAsset.name());
 
 
 					log.debug("Loaded GameString: "+gameStringAsset.name());
@@ -271,9 +271,9 @@ public class AssetDataIndex
 
 
 
-	static public ConcurrentHashMap<String,MapData> mapDataList = new ConcurrentHashMap<String,MapData>();
-	static public ConcurrentHashMap<String,String> mapDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> mapDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,MapData> mapDataList = new ConcurrentHashMap<Integer,MapData>();
+	//static public ConcurrentHashMap<String,String> mapDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> mapDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
 	static public ConcurrentHashMap<String,Integer> mapDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
 	static public ConcurrentHashMap<Integer,String> mapDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
@@ -307,9 +307,9 @@ public class AssetDataIndex
 				{
 					MapData mapData = MapData.fromJSON(s);
 
-					mapDataList.put(mapData.name(),mapData);
-					mapDataBase64List.put(mapData.name(),s);
-					mapDataByIDBase64List.put(mapData.id(),s);
+					mapDataList.put(mapData.id(),mapData);
+					//mapDataBase64List.put(mapData.name(),s);
+					//mapDataByIDBase64List.put(mapData.id(),s);
 					mapDataGetIDByNameList.put(mapData.name(),mapData.id());
 					mapDataGetNameByIDList.put(mapData.id(),mapData.name());
 
@@ -319,11 +319,11 @@ public class AssetDataIndex
 					{
 						EventData eventAsset = mapData.eventDataList().get(n);
 
-						eventDataList.put(eventAsset.name(),eventAsset);
-						eventDataBase64List.put(eventAsset.name(),s);
-						eventDataByIDBase64List.put(eventAsset.id(),s);
-						eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
-						eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+						eventDataList.put(eventAsset.id(),eventAsset);
+						//eventDataBase64List.put(eventAsset.name(),s);
+						//eventDataByIDBase64List.put(eventAsset.id(),s);
+						//eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
+						//eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 						log.debug("Loaded Map Event: "+eventAsset.name());
 					}
@@ -334,11 +334,11 @@ public class AssetDataIndex
 
 						if(eventAsset!=null)
 						{
-							eventDataList.put(eventAsset.name(),eventAsset);
-							eventDataBase64List.put(eventAsset.name(),s);
-							eventDataByIDBase64List.put(eventAsset.id(),s);
-							eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
-							eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+							eventDataList.put(eventAsset.id(),eventAsset);
+							//eventDataBase64List.put(eventAsset.name(),s);
+							//eventDataByIDBase64List.put(eventAsset.id(),s);
+							//eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
+							//eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 							log.debug("Loaded Door Event: "+eventAsset.name());
 						}
@@ -354,11 +354,11 @@ public class AssetDataIndex
 
 							if(eventAsset!=null)
 							{
-								eventDataList.put(eventAsset.name(),eventAsset);
-								eventDataBase64List.put(eventAsset.name(),s);
-								eventDataByIDBase64List.put(eventAsset.id(),s);
-								eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
-								eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+								eventDataList.put(eventAsset.id(),eventAsset);
+								//eventDataBase64List.put(eventAsset.name(),s);
+								//eventDataByIDBase64List.put(eventAsset.id(),s);
+								//eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
+								//eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 								log.debug("Loaded Area Event: "+eventAsset.name());
 							}
@@ -370,11 +370,11 @@ public class AssetDataIndex
 
 							if(eventAsset!=null)
 							{
-								eventDataList.put(eventAsset.name(),eventAsset);
-								eventDataBase64List.put(eventAsset.name(),s);
-								eventDataByIDBase64List.put(eventAsset.id(),s);
-								eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
-								eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+								eventDataList.put(eventAsset.id(),eventAsset);
+								//eventDataBase64List.put(eventAsset.name(),s);
+								//eventDataByIDBase64List.put(eventAsset.id(),s);
+								//eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
+								//eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 								log.debug("Loaded Entity Event: "+eventAsset.name());
 							}
@@ -391,9 +391,9 @@ public class AssetDataIndex
 	}
 
 
-	static public ConcurrentHashMap<String,MusicData> musicDataList = new ConcurrentHashMap<String,MusicData>();
-	static public ConcurrentHashMap<String,String> musicDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> musicDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,MusicData> musicDataList = new ConcurrentHashMap<Integer,MusicData>();
+	//static public ConcurrentHashMap<String,String> musicDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> musicDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
 	static public ConcurrentHashMap<String,Integer> musicDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
 	static public ConcurrentHashMap<Integer,String> musicDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
@@ -427,9 +427,9 @@ public class AssetDataIndex
 				{
 					MusicData musicAsset = MusicData.fromJSON(s);
 
-					musicDataList.put(musicAsset.name(),musicAsset);
-					musicDataBase64List.put(musicAsset.name(),s);
-					musicDataByIDBase64List.put(musicAsset.id(),s);
+					musicDataList.put(musicAsset.id(),musicAsset);
+					//musicDataBase64List.put(musicAsset.name(),s);
+					//musicDataByIDBase64List.put(musicAsset.id(),s);
 					musicDataGetIDByNameList.put(musicAsset.name(),musicAsset.id());
 					musicDataGetNameByIDList.put(musicAsset.id(),musicAsset.name());
 
@@ -447,11 +447,11 @@ public class AssetDataIndex
 
 
 
-	static public ConcurrentHashMap<String,SkillData> skillDataList = new ConcurrentHashMap<String,SkillData>();
-	static public ConcurrentHashMap<String,String> skillDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> skillDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
-	static public ConcurrentHashMap<String,Integer> skillDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
-	static public ConcurrentHashMap<Integer,String> skillDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,SkillData> skillDataList = new ConcurrentHashMap<Integer,SkillData>();
+	//static public ConcurrentHashMap<String,String> skillDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> skillDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	//static public ConcurrentHashMap<String,Integer> skillDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
+	//static public ConcurrentHashMap<Integer,String> skillDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
 
 
@@ -484,11 +484,11 @@ public class AssetDataIndex
 					SkillData skillAsset = SkillData.fromJSON(s);
 
 
-					skillDataList.put(skillAsset.name(),skillAsset);
-					skillDataBase64List.put(skillAsset.name(),s);
-					skillDataByIDBase64List.put(skillAsset.id(),s);
-					skillDataGetIDByNameList.put(skillAsset.name(),skillAsset.id());
-					skillDataGetNameByIDList.put(skillAsset.id(),skillAsset.name());
+					skillDataList.put(skillAsset.id(),skillAsset);
+					//skillDataBase64List.put(skillAsset.name(),s);
+					//skillDataByIDBase64List.put(skillAsset.id(),s);
+					//skillDataGetIDByNameList.put(skillAsset.name(),skillAsset.id());
+					//skillDataGetNameByIDList.put(skillAsset.id(),skillAsset.name());
 
 
 					log.debug("Loaded Skill: "+skillAsset.name());
@@ -505,9 +505,9 @@ public class AssetDataIndex
 
 
 
-	static public ConcurrentHashMap<String,SoundData> soundDataList = new ConcurrentHashMap<String,SoundData>();
-	static public ConcurrentHashMap<String,String> soundDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> soundDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,SoundData> soundDataList = new ConcurrentHashMap<Integer,SoundData>();
+	//static public ConcurrentHashMap<String,String> soundDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> soundDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
 	static public ConcurrentHashMap<String,Integer> soundDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
 	static public ConcurrentHashMap<Integer,String> soundDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
@@ -540,9 +540,9 @@ public class AssetDataIndex
 				{
 					SoundData soundAsset = SoundData.fromJSON(s);
 
-					soundDataList.put(soundAsset.name(),soundAsset);
-					soundDataBase64List.put(soundAsset.name(),s);
-					soundDataByIDBase64List.put(soundAsset.id(),s);
+					soundDataList.put(soundAsset.id(),soundAsset);
+					//soundDataBase64List.put(soundAsset.name(),s);
+					//soundDataByIDBase64List.put(soundAsset.id(),s);
 					soundDataGetIDByNameList.put(soundAsset.name(),soundAsset.id());
 					soundDataGetNameByIDList.put(soundAsset.id(),soundAsset.name());
 
@@ -557,9 +557,9 @@ public class AssetDataIndex
 
 
 
-	static public ConcurrentHashMap<String,SpriteData> spriteDataList = new ConcurrentHashMap<String,SpriteData>();
-	static public ConcurrentHashMap<String,String> spriteDataBase64List = new ConcurrentHashMap<String,String>();
-	static public ConcurrentHashMap<Integer,String> spriteDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
+	static public ConcurrentHashMap<Integer,SpriteData> spriteDataList = new ConcurrentHashMap<Integer,SpriteData>();
+	//static public ConcurrentHashMap<String,String> spriteDataBase64List = new ConcurrentHashMap<String,String>();
+	//static public ConcurrentHashMap<Integer,String> spriteDataByIDBase64List = new ConcurrentHashMap<Integer,String>();
 	static public ConcurrentHashMap<String,Integer> spriteDataGetIDByNameList = new ConcurrentHashMap<String,Integer>();
 	static public ConcurrentHashMap<Integer,String> spriteDataGetNameByIDList = new ConcurrentHashMap<Integer,String>();
 
@@ -592,9 +592,9 @@ public class AssetDataIndex
 				{
 					SpriteData spriteAsset = SpriteData.fromJSON(s);
 
-					spriteDataList.put(spriteAsset.name(),spriteAsset);
-					spriteDataBase64List.put(spriteAsset.name(),s);
-					spriteDataByIDBase64List.put(spriteAsset.id(),s);
+					spriteDataList.put(spriteAsset.id(),spriteAsset);
+					//spriteDataBase64List.put(spriteAsset.name(),s);
+					//spriteDataByIDBase64List.put(spriteAsset.id(),s);
 					spriteDataGetIDByNameList.put(spriteAsset.name(),spriteAsset.id());
 					spriteDataGetNameByIDList.put(spriteAsset.id(),spriteAsset.name());
 
@@ -604,11 +604,11 @@ public class AssetDataIndex
 
 					if(eventAsset!=null)
 					{
-						eventDataList.put(eventAsset.name(),eventAsset);
-						eventDataBase64List.put(eventAsset.name(),s);
-						eventDataByIDBase64List.put(eventAsset.id(),s);
-						eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
-						eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
+						eventDataList.put(eventAsset.id(),eventAsset);
+						//eventDataBase64List.put(eventAsset.name(),s);
+						//eventDataByIDBase64List.put(eventAsset.id(),s);
+						//eventDataGetIDByNameList.put(eventAsset.name(),eventAsset.id());
+						//eventDataGetNameByIDList.put(eventAsset.id(),eventAsset.name());
 
 						log.debug("Loaded Sprite Event: "+eventAsset.name());
 					}
