@@ -132,8 +132,8 @@ public class ServerMain
 		File f = new File("/localServer");
 		if(f.exists())
 		{
-			
-			
+
+
 		}
 
 		BasicConfigurator.configure();
@@ -145,7 +145,7 @@ public class ServerMain
 
 		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
 		encoder.setContext(loggerContext);
-		encoder.setPattern("%-50(%highlight(%-5level| %msg   )) \\(%F:%L\\) %boldMagenta(%c{2}.%M\\(\\)) %boldGreen([%thread]) \n");
+		encoder.setPattern("%date{HH:mm:ss} %-50(%highlight(%-5level| %msg   )) \\(%F:%L\\) %boldMagenta(%c{2}.%M\\(\\)) %boldGreen([%thread]) \n");
 		encoder.start();
 
 		ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<ILoggingEvent>();

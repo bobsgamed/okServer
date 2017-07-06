@@ -840,8 +840,8 @@ public class GameServerTCP
 				}
 			}
 
-			ctx.getChannel().close();
-			e.getChannel().close();
+			//ctx.getChannel().close();
+			//e.getChannel().close();
 		}
 
 	}
@@ -3299,6 +3299,9 @@ public class GameServerTCP
 		BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
 		textEncryptor.setPassword(session.encryptionKey);
 
+		//log.info(session.encryptionKey);
+		//log.info(encryptedGameSave);
+
 		String plainText = textEncryptor.decrypt(encryptedGameSave);
 
 		GameSave g = new GameSave();
@@ -3417,7 +3420,7 @@ public class GameServerTCP
 		}
 		//gameSave:encryptedGameSave
 		s = s.substring(s.indexOf(":")+1);//encryptedGameSave
-		String encryptedGameSave = s;
+		String encryptedGameSave = s.substring(0,s.indexOf(":"));
 		//decrypt game save blob
 		GameSave g = decryptGameSave(c,encryptedGameSave);
 
