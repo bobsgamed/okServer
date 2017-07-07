@@ -1310,17 +1310,17 @@ public class GameServerTCP
 
 			Country country = response.getCountry();
 			//System.out.println(country.getIsoCode());            // 'US'
-			System.out.println(country.getName());               // 'United States'
+			//System.out.println(country.getName());               // 'United States'
 			//System.out.println(country.getNames().get("zh-CN")); // ''
 
 
 
 			Subdivision subdivision = response.getMostSpecificSubdivision();
-			System.out.println(subdivision.getName());    // 'Minnesota'
+			//System.out.println(subdivision.getName());    // 'Minnesota'
 			//System.out.println(subdivision.getIsoCode()); // 'MN'
 
-			loc += country.getName();
-			loc += " ";
+			loc += subdivision.getName()+", "+country.getName();
+			//loc += " ";
 
 			//City city = response.getCity();
 			//System.out.println(city.getName()); // 'Minneapolis'
@@ -1334,7 +1334,7 @@ public class GameServerTCP
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 
 
