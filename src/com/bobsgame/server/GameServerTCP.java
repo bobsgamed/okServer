@@ -40,7 +40,14 @@ import com.bobsgame.server.assets.GameString;
 import com.bobsgame.server.assets.Music;
 import com.bobsgame.server.assets.Sound;
 import com.google.gson.Gson;
-
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+import com.maxmind.geoip2.model.CityResponse;
+import com.maxmind.geoip2.record.City;
+import com.maxmind.geoip2.record.Country;
+import com.maxmind.geoip2.record.Location;
+import com.maxmind.geoip2.record.Postal;
+import com.maxmind.geoip2.record.Subdivision;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
@@ -53,7 +60,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -62,6 +71,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.sql.*;
 
@@ -490,8 +500,16 @@ public class GameServerTCP
 		@Override
 		public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception
 		{//===============================================================================================
-			log.info("channelConnected: ("+e.getChannel().getId()+")");
+			int id = e.getChannel().getId();
+			String ip = e.getChannel().getRemoteAddress().toString();
+
+
+			log.info("channelConnected: ("+id+") "+ip+" "+getCityFromIP(ip));
+
+
+
 		}
+
 
 
 
@@ -507,7 +525,11 @@ public class GameServerTCP
 			String userName = "";
 			if(c!=null)userName = c.userName;
 
-			log.error("channelDisconnected: ("+e.getChannel().getId()+") "+userName);
+
+			int id = e.getChannel().getId();
+			String ip = e.getChannel().getRemoteAddress().toString();
+
+			log.info("channelDisconnected: ("+id+") "+userName+" "+ip+" "+getCityFromIP(ip));
 
 
 
@@ -896,9 +918,9 @@ public class GameServerTCP
 
 
 		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1 || s.indexOf("Create_Account") != -1)
-		log.info("SEND: ("+c.getId()+") "+userName+" | "+s.substring(0, s.indexOf(":")+1)+"(censored)");
+		log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+s.substring(0, s.indexOf(":")+1)+"(censored)");
 		else
-		log.info("SEND: ("+c.getId()+") "+userName+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
+		log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
 
 
 
@@ -1227,6 +1249,104 @@ public class GameServerTCP
 		}
 	}
 
+
+	//===============================================================================================
+	public static File getResourceAsFile(String resourcePath)
+	{//===============================================================================================
+		try {
+			InputStream in = ServerMain.class.getClassLoader().getResourceAsStream(resourcePath);
+			//InputStream in = ClassLoader.getSystemClassLoader().getResourceAsStream(resourcePath);
+			if (in == null) {
+				return null;
+			}
+
+			File tempFile = File.createTempFile(String.valueOf(in.hashCode()), ".tmp");
+			tempFile.deleteOnExit();
+
+			try (FileOutputStream out = new FileOutputStream(tempFile)) {
+				//copy stream
+				byte[] buffer = new byte[1024];
+				int bytesRead;
+				while ((bytesRead = in.read(buffer)) != -1) {
+					out.write(buffer, 0, bytesRead);
+				}
+			}
+			return tempFile;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	File geoDB = null;
+	//===============================================================================================
+	public String getCityFromIP(String ip)
+	{//===============================================================================================
+
+		//ServerMain.class.getClassLoader().getResourceAsStream("GeoIP2-City.mmdb");
+
+		// A File object pointing to your GeoIP2 or GeoLite2 database
+		if(ip.startsWith("/"))ip = ip.substring(1);
+		if(ip.contains(":"))ip = ip.substring(0,ip.indexOf(":"));
+		if(ip.equals("127.0.0.1"))return "localhost";
+
+		if(geoDB==null)
+		{
+			geoDB = getResourceAsFile("GeoLite2-City.mmdb");
+		}
+		// This creates the DatabaseReader object, which should be reused across
+		// lookups.
+		DatabaseReader reader;
+		InetAddress ipAddress;
+		CityResponse response;
+
+		String loc = "";
+		try
+		{
+			reader=new DatabaseReader.Builder(geoDB).build();
+			ipAddress=InetAddress.getByName(ip);
+			response=reader.city(ipAddress);
+
+
+			Country country = response.getCountry();
+			//System.out.println(country.getIsoCode());            // 'US'
+			System.out.println(country.getName());               // 'United States'
+			//System.out.println(country.getNames().get("zh-CN")); // ''
+
+
+
+			Subdivision subdivision = response.getMostSpecificSubdivision();
+			System.out.println(subdivision.getName());    // 'Minnesota'
+			//System.out.println(subdivision.getIsoCode()); // 'MN'
+
+			loc += country.getName();
+			loc += " ";
+
+			//City city = response.getCity();
+			//System.out.println(city.getName()); // 'Minneapolis'
+
+			//Postal postal = response.getPostal();
+			//System.out.println(postal.getCode()); // '55455'
+
+			//Location location = response.getLocation();
+			//System.out.println(location.getLatitude());  // 44.9733
+			//System.out.println(location.getLongitude()); // -93.2323
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+
+
+		// Replace "city" with the appropriate method for your database, e.g.,
+		// "country".
+
+
+		return loc;
+
+
+
+	}
 
 
 	//===============================================================================================
