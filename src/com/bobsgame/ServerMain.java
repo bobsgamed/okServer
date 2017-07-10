@@ -494,8 +494,8 @@ public class ServerMain
 
 	public long ticksSincePublishedLog = 0;
 
-	public long startTime = System.currentTimeMillis();
-	public long lastTime = System.currentTimeMillis();
+	static public long startTime = System.currentTimeMillis();
+	static public long lastTime = System.currentTimeMillis();
 
 
 	static public Runtime rt = null;

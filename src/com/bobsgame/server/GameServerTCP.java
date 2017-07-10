@@ -476,7 +476,7 @@ public class GameServerTCP
 
 				writePlaintext(e.getChannel(),"ping"+BobNet.endline);
 
-				log.debug("channelIdle: ping | ChannelID: "+e.getChannel().getId()+" | Client userID: "+id);
+				//log.debug("channelIdle: ping | ChannelID: "+e.getChannel().getId()+" | Client userID: "+id);
 			}
 
 
@@ -490,7 +490,7 @@ public class GameServerTCP
 		{//===============================================================================================
 			if (e instanceof ChannelStateEvent)
 			{
-				log.debug("handleUpstream: "+e.toString());
+				//log.debug("handleUpstream: "+e.toString());
 			}
 			super.handleUpstream(ctx, e);
 		}
@@ -746,6 +746,7 @@ public class GameServerTCP
 
 
 			//if(BobNet.debugMode)
+			if(message.startsWith("ping")==false && message.startsWith("pong")==false)
 			{
 				long userID = -1;
 				String userName = "";
@@ -784,6 +785,11 @@ public class GameServerTCP
 
 
 			if(message.startsWith(BobNet.Server_IP_Address_Request)){incomingServerIPAddressRequest(e);return;}
+			if(message.startsWith(BobNet.Server_Stats_Request)){incomingServerStatsRequest(e);return;}
+			if(message.startsWith(BobNet.Client_Location_Request)){incomingClientLocationRequest(e);return;}
+
+
+
 
 			if(message.startsWith(BobNet.Login_Request)){incomingLoginRequest(e);return;}
 			if(message.startsWith(BobNet.Facebook_Login_Request)){incomingFacebookLoginOrCreateAccountAndLoginRequest(e);return;}
@@ -915,14 +921,15 @@ public class GameServerTCP
 		}
 
 
+		if(s.startsWith("ping")==false && s.startsWith("pong")==false)
+		{
 
+			if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1 || s.indexOf("Create_Account") != -1)
+			log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+s.substring(0, s.indexOf(":")+1)+"(censored)");
+			else
+			log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
 
-		if(s.indexOf("Login")!=-1 || s.indexOf("Reconnect") != -1 || s.indexOf("Create_Account") != -1)
-		log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+s.substring(0, s.indexOf(":")+1)+"(censored)");
-		else
-		log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+s.substring(0,Math.min(100,s.length()-2))+"...");
-
-
+		}
 
 
 
@@ -1355,6 +1362,82 @@ public class GameServerTCP
 
 		//ServerIPAddressResponse
 		writeCompressed(e.getChannel(),BobNet.Server_IP_Address_Response+ServerMain.myIPAddressString+BobNet.endline);
+
+	}
+
+
+
+
+	//=========================================================================================================================
+	class ServerStats
+	{//=========================================================================================================================
+
+		public int serversOnline = 0;
+		public int usersOnline = 0;
+		public long serverUptime = 0;
+
+		//===============================================================================================
+		public String toString()
+		{//===============================================================================================
+
+			String s = "";
+
+			s += "serversOnline:`" + (serversOnline) + "`,";
+			s += "usersOnline:`" + (usersOnline) + "`,";
+			s += "serverUptime:`" + (serverUptime) + "`,";
+
+			return s;
+		}
+
+		public String initFromString(String t)
+		{
+
+			t = t.substring(t.indexOf("serversOnline:`") + 1);
+			t = t.substring(t.indexOf("`") + 1);
+			serversOnline = Integer.parseInt(t.substring(0, t.indexOf("`")));
+			t = t.substring(t.indexOf("`,") + 2);
+
+			t = t.substring(t.indexOf("usersOnline:`") + 1);
+			t = t.substring(t.indexOf("`") + 1);
+			usersOnline = Integer.parseInt(t.substring(0, t.indexOf("`")));
+			t = t.substring(t.indexOf("`,") + 2);
+
+			t = t.substring(t.indexOf("serverUptime:`") + 1);
+			t = t.substring(t.indexOf("`") + 1);
+			serverUptime = Long.parseLong(t.substring(0, t.indexOf("`")));
+			t = t.substring(t.indexOf("`,") + 2);
+
+			return t;
+		}
+	};
+
+
+
+
+
+	//===============================================================================================
+	private void incomingServerStatsRequest(MessageEvent e)
+	{//===============================================================================================
+
+
+		ServerStats s = new ServerStats();
+		s.serversOnline = 1;//TODO: have servers queury the index server periodically to get a server count
+		s.usersOnline = clientsByChannel.size();//TODO: also have servers queury the index server periodically to get a global user count from all servers
+		s.serverUptime = (System.currentTimeMillis() - ServerMain.startTime)/1000;
+
+
+		writeCompressed(e.getChannel(),BobNet.Server_Stats_Response+s.toString()+BobNet.endline);
+
+	}
+
+	//===============================================================================================
+	private void incomingClientLocationRequest(MessageEvent e)
+	{//===============================================================================================
+
+
+		String ip = e.getChannel().getRemoteAddress().toString();
+
+		writeCompressed(e.getChannel(),BobNet.Client_Location_Response+getCityFromIP(ip)+BobNet.endline);
 
 	}
 
