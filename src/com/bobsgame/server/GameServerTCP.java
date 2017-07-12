@@ -5618,7 +5618,7 @@ public class GameServerTCP
 		//MapRequest:name
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String name = AssetDataIndex.mapDataGetNameByIDList.get(id);
 		String b64 = AssetDataIndex.mapDataList.get(id).toString();
@@ -5671,7 +5671,7 @@ public class GameServerTCP
 		//SpriteRequest:name
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String name = AssetDataIndex.spriteDataGetNameByIDList.get(id);
 		String b64 = AssetDataIndex.spriteDataList.get(id).toString();
@@ -5697,7 +5697,7 @@ public class GameServerTCP
 		//DialogueRequest:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String name = AssetDataIndex.dialogueDataList.get(id).name();
 		String b64 = AssetDataIndex.dialogueDataList.get(id).toString();
@@ -5727,7 +5727,7 @@ public class GameServerTCP
 		//Flag_Request:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.flagDataList.get(id).toString();
 		String name = AssetDataIndex.flagDataList.get(id).name();
@@ -5751,7 +5751,7 @@ public class GameServerTCP
 		//Skill_Request:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.skillDataList.get(id).toString();
 		String name = AssetDataIndex.skillDataList.get(id).name();
@@ -5816,7 +5816,7 @@ public class GameServerTCP
 		//EventRequest:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.eventDataList.get(id).toString();
 		String name = AssetDataIndex.eventDataList.get(id).name();
@@ -5847,7 +5847,7 @@ public class GameServerTCP
 		//GameStringRequest:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 
 		String b64 = AssetDataIndex.gameStringDataList.get(id).toString();
@@ -5875,7 +5875,7 @@ public class GameServerTCP
 		//MusicRequest:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 
 		String b64 = AssetDataIndex.musicDataList.get(id).toString();
@@ -5902,7 +5902,7 @@ public class GameServerTCP
 		//SoundRequest:id
 		s = s.substring(s.indexOf(":")+1);
 		s = s.substring(0,s.indexOf(":"));
-		try{id = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();}
+		try{id = Integer.parseInt(s);}catch(NumberFormatException ex){ex.printStackTrace();}
 
 		String b64 = AssetDataIndex.soundDataList.get(id).toString();
 		String name = AssetDataIndex.soundDataGetNameByIDList.get(id);
