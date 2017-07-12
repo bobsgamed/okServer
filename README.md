@@ -22,30 +22,30 @@ https://github.com/bobsgame/BobNetLibs
 To build: Import as project in Eclipse, add IvyDE to project, resolve Ivy dependencies. 
 --
 
-#*bob's game* is:
-##*THE GREATEST PUZZLE GAME EVER MADE*
+# *bob's game* is:
+## *THE GREATEST PUZZLE GAME EVER MADE*
 
-##EVERY PUZZLE GAME IN ONE
+## EVERY PUZZLE GAME IN ONE
 
-##A CUSTOM PUZZLE GAME CREATION SYSTEM
+## A CUSTOM PUZZLE GAME CREATION SYSTEM
 
-##A WORLD TOURNAMENT PLATFORM AND GLOBAL RANKING AND LEADERBOARDS FOR ALL PUZZLE GAMES
+## A WORLD TOURNAMENT PLATFORM AND GLOBAL RANKING AND LEADERBOARDS FOR ALL PUZZLE GAMES
 
-##LOCAL MULTIPLAYER WITH UNLIMITED PLAYERS
+## LOCAL MULTIPLAYER WITH UNLIMITED PLAYERS
 
-##ONLINE MULTIPLAYER WITH UNLIMITED PLAYERS
+## ONLINE MULTIPLAYER WITH UNLIMITED PLAYERS
 
-##MIXED MODE ONLINE/LOCAL MULTIPLAYER
+## MIXED MODE ONLINE/LOCAL MULTIPLAYER
 
-##COMPLETELY FREE
+## COMPLETELY FREE
 
-##WRITTEN FROM SCRATCH IN C++
+## WRITTEN FROM SCRATCH IN C++
 
-##SOURCE CODE AVAILABLE
+## SOURCE CODE AVAILABLE
 
-##DOWNLOAD IT RIGHT NOW!
+## DOWNLOAD IT RIGHT NOW!
 
-##This game is actively developed. New features are being added constantly and bugs will happen.
+## This game is actively developed. New features are being added constantly and bugs will happen.
 
 [Development Forum](http://bobsgame.com/forum) is open for bug reports. Please report any issues you notice. I rely on your testing.
 
@@ -73,7 +73,7 @@ It will also have the source code available on GitHub so it can grow into a stan
 
 **bob's game is not done- it's quite playable, but I am actively adding many more features.**
 
-##Upcoming feature list:
+## Upcoming feature list:
 * Lots more game mode features, modes, and goals
 * Better multiplayer lobby with chat
 * Tournament features and ladders, regional and global
@@ -83,7 +83,7 @@ It will also have the source code available on GitHub so it can grow into a stan
 * Custom themes, sounds, and music
 * Android, iOS, and Browser support
 
-#License
+# License
 Copyright 2017 BobCorporation, Robert Pelloni
 
 bob's game® is a registered trademark of Robert Pelloni
