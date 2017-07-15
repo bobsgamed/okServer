@@ -4634,7 +4634,7 @@ public class GameServerTCP
 
 			howManyTimesUpdated++;
 
-			if(lastUserID!=userID)
+			if(lastUserID!=userID && userID != 1)//bob can edit anything
 			{
 
 				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Upload_Response+"Failed: Already exists on server and you are not the creator."+BobNet.endline);
