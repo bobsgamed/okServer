@@ -4590,6 +4590,11 @@ public class GameServerTCP
 		long howManyTimesUpdated = 0;
 		long lastUserID = -1;
 		boolean exists = false;
+		String oldXML = "";
+		String history = "";
+		String oldName = "";
+		long oldLastModified = -1;
+
 
 		Connection databaseConnection = openAccountsDBOnAmazonRDS();
 		if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
@@ -4603,7 +4608,11 @@ public class GameServerTCP
 				ps = databaseConnection.prepareStatement(
 						"SELECT " +
 								"userID , " + //bigint 20
-								"howManyTimesUpdated " +//int 11
+								"howManyTimesUpdated , " +//int 11
+								"xml , " +//text
+								"history , " +//text
+								"name , " +//text
+								"lastModified " +//long
 						"FROM "+dbName+" WHERE uuid = ?");
 				int i = 0;
 				ps.setString(++i, uuid);
@@ -4619,7 +4628,14 @@ public class GameServerTCP
 					exists = true;
 					lastUserID = resultSet.getLong("userID");
 					howManyTimesUpdated = resultSet.getLong("howManyTimesUpdated");
+					oldXML = resultSet.getString("xml");
+					history = resultSet.getString("history");
+					oldName = resultSet.getString("history");
+					oldLastModified = resultSet.getLong("lastModified");
 
+					if(oldXML==null)oldXML = "";
+					if(history==null)history = "";
+					if(oldName==null)oldName = "";
 				}
 
 				resultSet.close();
@@ -4644,14 +4660,17 @@ public class GameServerTCP
 
 			long lastModified = System.currentTimeMillis();
 
+			history = "" + oldName + ":" + oldLastModified + ":" + oldXML + ":\n" + history;
+
 			try
 			{
 				PreparedStatement ps = databaseConnection.prepareStatement(
 						"UPDATE "+dbName+" SET " +
 						"xml = ? , " +
 						"lastModified = ? , " +
-						"howManyTimesUpdated = ? " +
-						"name = ? " +
+						"howManyTimesUpdated = ? , " +
+						"name = ? , " +
+						"history = ? " +
 						"WHERE uuid = ?");
 
 				int i=0;
@@ -4659,6 +4678,7 @@ public class GameServerTCP
 				ps.setLong(++i, lastModified);
 				ps.setLong(++i, howManyTimesUpdated);
 				ps.setString(++i, name);
+				ps.setString(++i, history);
 				ps.setString(++i, uuid);
 				ps.executeUpdate();
 
@@ -4732,6 +4752,7 @@ public class GameServerTCP
 						"userID , " + //bigint 20
 						"dateCreated , " +//bigint 30
 						"lastModified , " +//bigint 30
+						"history , " +//bigint 30
 						"howManyTimesUpdated , " +//int 11
 						"upVotes , " +//bigint 20
 						"downVotes , " +//bigint 20
@@ -4739,7 +4760,7 @@ public class GameServerTCP
 						") " +
 						"VALUES " +
 						"( " +
-						"? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ?" +
+						"? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ?" +
 						") ");
 
 
@@ -4751,6 +4772,7 @@ public class GameServerTCP
 				ps.setLong(++i, userID);
 				ps.setLong(++i, dateCreated);
 				ps.setLong(++i, dateCreated);
+				ps.setString(++i, history);
 				ps.setLong(++i, 0);
 				ps.setLong(++i, 1);
 				ps.setLong(++i, 0);
