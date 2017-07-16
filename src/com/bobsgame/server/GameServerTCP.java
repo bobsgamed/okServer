@@ -860,6 +860,11 @@ public class GameServerTCP
 				log.error("Exception caught from Client connection - ReadTimeoutException: "+cause.getMessage());
 			}
 			else
+			if(cause instanceof IOException && cause.getMessage().startsWith("An existing connection was forcibly closed by the remote host"))
+			{
+				log.error("Exception caught from Client connection - IOException: "+cause.getMessage());
+			}
+			else
 			{
 				//if(BobNet.debugMode)
 				{
@@ -4630,7 +4635,7 @@ public class GameServerTCP
 					howManyTimesUpdated = resultSet.getLong("howManyTimesUpdated");
 					oldXML = resultSet.getString("xml");
 					history = resultSet.getString("history");
-					oldName = resultSet.getString("history");
+					oldName = resultSet.getString("name");
 					oldLastModified = resultSet.getLong("lastModified");
 
 					if(oldXML==null)oldXML = "";
@@ -4894,12 +4899,10 @@ public class GameServerTCP
 
 
 			boolean upOrDown = false;
-			try{upOrDown = Boolean.parseBoolean(upOrDownString);}catch(Exception ex)
-			{
-				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Failed: Could not parse vote."+BobNet.endline);
-				closeDBConnection(databaseConnection);
-				return;
-			}
+
+			if(upOrDownString.equals("up"))upOrDown=true;
+			if(upOrDownString.equals("down"))upOrDown=false;
+
 
 			if(upOrDown)upVotes++;
 			else downVotes++;
@@ -4922,16 +4925,23 @@ public class GameServerTCP
 				usersVotedCSV = usersVotedCSV.substring(usersVotedCSV.indexOf(":")+1);
 				lastVote = usersVotedCSV.substring(0,usersVotedCSV.indexOf(","));
 
-				usersVotedCSV = usersVotedCSV.substring(usersVotedCSV.indexOf(",")+1);
+				usersVotedCSV = usersVotedCSV.substring(usersVotedCSV.indexOf(","));
 				usersVotedCSV = front + usersVotedCSV;
 
 			}
 
-			if((lastVote.equals("up") && upOrDown==true) || (lastVote.equals("down") && upOrDown==false))
+			if(lastVote.length()!=0)
 			{
-				writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Already voted "+lastVote+"!"+BobNet.endline);
-				closeDBConnection(databaseConnection);
-				return;
+				if((lastVote.equals("up") && upOrDown==true) || (lastVote.equals("down") && upOrDown==false))
+				{
+					writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+"Already voted "+lastVote+"!"+BobNet.endline);
+					closeDBConnection(databaseConnection);
+					return;
+				}
+				else
+				{
+					changedVote = true;
+				}
 			}
 
 			if(upOrDown)usersVotedCSV = usersVotedCSV+userID+":up,";
@@ -4959,7 +4969,7 @@ public class GameServerTCP
 			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();}
 
 			String message = "Success: Thank you for voting!";
-			if(changedVote)message = "Success: You have changed your vote.";
+			if(changedVote)message = "Success: You have updated your vote.";
 			writeCompressed(e.getChannel(),BobNet.Bobs_Game_GameTypesAndSequences_Vote_Response+message+BobNet.endline);
 			closeDBConnection(databaseConnection);
 		}
