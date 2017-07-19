@@ -860,7 +860,7 @@ public class GameServerTCP
 				log.error("Exception caught from Client connection - ReadTimeoutException: "+cause.getMessage());
 			}
 			else
-			if(cause instanceof IOException && cause.getMessage().startsWith("An existing connection was forcibly closed by the remote host"))
+			if(cause instanceof IOException)
 			{
 				log.error("Exception caught from Client connection - IOException: "+cause.getMessage());
 			}
@@ -4475,6 +4475,34 @@ public class GameServerTCP
 					if(usersVotedCSV==null)usersVotedCSV="";
 
 
+					String parseVotes = new String(usersVotedCSV);
+					//ignore database upvote/downvote count because it's not accurate since you can change your vote, should remove it from DB
+					//instead parse actual votes here
+
+					upVotes = 0;
+					downVotes = 0;
+
+					//userID:up,
+					while(parseVotes.contains(":"))
+					{
+						parseVotes = parseVotes.substring(parseVotes.indexOf(":")+1);
+						String vote = parseVotes.substring(0,parseVotes.indexOf(","));
+						parseVotes = parseVotes.substring(parseVotes.indexOf(",")+1);
+
+						if(vote.equals("up"))
+						{
+							upVotes++;
+						}
+
+						if(vote.equals("down"))
+						{
+							downVotes++;
+						}
+
+					}
+
+
+					//get this user's vote
 					String userVote = "none";
 					if(usersVotedCSV.startsWith(userID+":"))
 					{
@@ -4488,6 +4516,8 @@ public class GameServerTCP
 						usersVotedCSV = usersVotedCSV.substring(usersVotedCSV.indexOf(":")+1);
 						userVote = usersVotedCSV.substring(0,usersVotedCSV.indexOf(","));
 					}
+
+
 
 
 
