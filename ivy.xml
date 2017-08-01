@@ -18,9 +18,9 @@
 <dependency org="org.jasypt" name="jasypt" rev="latest.integration" />
 <dependency org="mysql" name="mysql-connector-java" rev="latest.integration" />
 <dependency org="com.restfb" name="restfb" rev="latest.integration"/>
-<dependency org="org.slf4j" name="slf4j-api" rev="latest.integration" />
-<dependency org="org.slf4j" name="jcl-over-slf4j" rev="latest.integration" />
-<dependency org="org.slf4j" name="log4j-over-slf4j" rev="latest.integration" />
+<dependency org="org.slf4j" name="slf4j-api" rev="1.7.25" />
+<dependency org="org.slf4j" name="jcl-over-slf4j" rev="1.7.25" />
+<dependency org="org.slf4j" name="log4j-over-slf4j" rev="1.7.25" />
 <dependency org="ch.qos.logback" name="logback-classic" rev="latest.integration" />
 <dependency org="ch.qos.logback" name="logback-core" rev="latest.integration" />
 <dependency org="log4j" name="log4j" rev="latest.integration" />

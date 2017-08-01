@@ -5273,10 +5273,13 @@ public class GameServerTCP
 		LeaderBoardScore score = new LeaderBoardScore();
 
 		//update user stats
+		
+		String objectiveString = "Play To Credits";
+		if(game.endlessMode==1)objectiveString = "Endless Mode";
 
 		//get user stats from database
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameAnyDifficulty =
-				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", "OVERALL");
+				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", "OVERALL", objectiveString);
 		//update the userStats from the game stats
 		userStatsForAnyGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score);
 		//update stats in db
@@ -5284,7 +5287,7 @@ public class GameServerTCP
 
 
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameThisDifficulty =
-				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", game.difficultyName);
+				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", game.difficultyName, objectiveString);
 		//update the userStats from the game stats
 		userStatsForAnyGameThisDifficulty.updateFromGameStats(databaseConnection, game, score);
 		//update stats in db
@@ -5292,7 +5295,7 @@ public class GameServerTCP
 
 
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameAnyDifficulty =
-				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, game.isGameTypeOrSequence, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, "OVERALL");
+				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, game.isGameTypeOrSequence, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, "OVERALL", objectiveString);
 		//update the userStats from the game stats
 		userStatsForThisGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score);
 		//update stats in db
@@ -5302,7 +5305,7 @@ public class GameServerTCP
 		//TODO: could get all userHighScores entries for this user, calculate favorite game and favorite difficulty
 
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameThisDifficulty =
-				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection,userID, userName, game.isGameTypeOrSequence, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, game.difficultyName);
+				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection,userID, userName, game.isGameTypeOrSequence, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, game.difficultyName, objectiveString);
 		//update the highScore from the game stats
 		userStatsForThisGameThisDifficulty.updateFromGameStats(databaseConnection, game, score);
 		//now update userHighScore in DB
