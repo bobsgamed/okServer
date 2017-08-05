@@ -746,7 +746,7 @@ public class GameServerTCP
 
 
 			//if(BobNet.debugMode)
-			if(message.startsWith("ping")==false && message.startsWith("pong")==false)
+			if(message.startsWith("ping")==false && message.startsWith("pong")==false && message.startsWith("Server_Stats")==false)
 			{
 				long userID = -1;
 				String userName = "";
@@ -1062,10 +1062,11 @@ public class GameServerTCP
 //		s = base64+BobNet.endline;
 //
 
-		String o = new String(s);
+		//String o = new String(s);
 
-
-
+		String plainTextCat = s.substring(0,Math.min(100,s.length()-2));
+		int origSize = s.length();
+		
 		try
 		{
 
@@ -1102,15 +1103,17 @@ public class GameServerTCP
 		}
 
 
-		int origSize = o.length();
+
 		int compSize = s.length();
 		String com = ("Compressed "+origSize+" to "+compSize+" "+(int)(((float)((float)compSize/(float)origSize))*100)+"%");
 
-		if(o.indexOf("Login")!=-1 || o.indexOf("Reconnect") != -1 || o.indexOf("Create_Account") != -1)
-		log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+o.substring(0, o.indexOf(":")+1)+"(censored) "+com);
-		else
-		log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+o.substring(0,Math.min(100,o.length()-2))+"..."+" "+com);
-
+		if(plainTextCat.indexOf("Server_Stats")==-1)
+		{
+			if(plainTextCat.indexOf("Login")!=-1 || plainTextCat.indexOf("Reconnect") != -1 || plainTextCat.indexOf("Create_Account") != -1)
+			log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+plainTextCat.substring(0, plainTextCat.indexOf(":")+1)+"(censored) "+com);
+			else
+			log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+plainTextCat+"..."+" "+com);
+		}
 
 		if(s.length()>1400)
 		{
@@ -5113,7 +5116,7 @@ public class GameServerTCP
 
 		//strip off header
 		s = s.substring(s.indexOf(":")+1);
-
+		
 
 		//log.debug(s);
 		createRoom(s,userID);
@@ -5386,12 +5389,12 @@ public class GameServerTCP
 	public void sendAllLeaderBoardsToClient(MessageEvent e)
 	{//===============================================================================================
 
-		log.info("Getting leaderboards from DB");
+		//log.info("Getting leaderboards from DB");
 		Connection databaseConnection = openAccountsDBOnAmazonRDS();
 		if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
 
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameLeaderBoardsByTotalTimePlayed = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameLeaderBoardsByTotalTimePlayed");
-		log.info("Got bobsGameLeaderBoardsByTotalTimePlayed");
+		//log.info("Got bobsGameLeaderBoardsByTotalTimePlayed");
 		String batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		for(int i=0; i<bobsGameLeaderBoardsByTotalTimePlayed.size(); i++)
 		{
@@ -5400,7 +5403,7 @@ public class GameServerTCP
 		writeCompressed(e.getChannel(),batch+BobNet.endline);
 		
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameLeaderBoardsByTotalBlocksCleared = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameLeaderBoardsByTotalBlocksCleared");
-		log.info("Got bobsGameLeaderBoardsByTotalBlocksCleared");
+		//log.info("Got bobsGameLeaderBoardsByTotalBlocksCleared");
 		batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		for(int i=0; i<bobsGameLeaderBoardsByTotalBlocksCleared.size(); i++)
 		{
@@ -5409,7 +5412,7 @@ public class GameServerTCP
 		writeCompressed(e.getChannel(),batch+BobNet.endline);
 		
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameLeaderBoardsByPlaneswalkerPoints = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameLeaderBoardsByPlaneswalkerPoints");
-		log.info("Got bobsGameLeaderBoardsByPlaneswalkerPoints");
+		//log.info("Got bobsGameLeaderBoardsByPlaneswalkerPoints");
 		batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		for(int i=0; i<bobsGameLeaderBoardsByPlaneswalkerPoints.size(); i++)
 		{
@@ -5418,7 +5421,7 @@ public class GameServerTCP
 		writeCompressed(e.getChannel(),batch+BobNet.endline);
 		
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameLeaderBoardsByEloScore = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameLeaderBoardsByEloScore");
-		log.info("Got bobsGameLeaderBoardsByEloScore");
+		//log.info("Got bobsGameLeaderBoardsByEloScore");
 		batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		for(int i=0; i<bobsGameLeaderBoardsByEloScore.size(); i++)
 		{
@@ -5427,7 +5430,7 @@ public class GameServerTCP
 		writeCompressed(e.getChannel(),batch+BobNet.endline);
 		
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameHighScoreBoardsByTimeLasted = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameHighScoreBoardsByTimeLasted");
-		log.info("Got bobsGameHighScoreBoardsByTimeLasted");
+		//log.info("Got bobsGameHighScoreBoardsByTimeLasted");
 		batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		for(int i=0; i<bobsGameHighScoreBoardsByTimeLasted.size(); i++)
 		{
@@ -5436,7 +5439,7 @@ public class GameServerTCP
 		writeCompressed(e.getChannel(),batch+BobNet.endline);
 		
 		ArrayList<BobsGameLeaderBoardAndHighScoreBoard> bobsGameHighScoreBoardsByBlocksCleared = BobsGameLeaderBoardAndHighScoreBoard.getAllLeaderBoardsAndHighScoreBoardsFromDB(databaseConnection, "bobsGameHighScoreBoardsByBlocksCleared");
-		log.info("Got bobsGameHighScoreBoardsByBlocksCleared");
+		//log.info("Got bobsGameHighScoreBoardsByBlocksCleared");
 		batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		for(int i=0; i<bobsGameHighScoreBoardsByBlocksCleared.size(); i++)
 		{
@@ -5447,7 +5450,7 @@ public class GameServerTCP
 		
 		closeDBConnection(databaseConnection);
 		
-		log.info("Got leaderboards from DB");
+		//log.info("Got leaderboards from DB");
 
 		//		String batch = ""+BobNet.Bobs_Game_UserStatsLeaderBoardsAndHighScoresBatched;
 		//		
