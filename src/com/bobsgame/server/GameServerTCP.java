@@ -5128,10 +5128,7 @@ public class GameServerTCP
 		//strip off header
 		s = s.substring(s.indexOf(":")+1);
 		
-<<<<<<< HEAD
-=======
 
->>>>>>> branch 'master' of https://github.com/bobsgame/BobsGameServer.git
 		//log.debug(s);
 		createRoom(s,userID);
 
