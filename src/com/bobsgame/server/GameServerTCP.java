@@ -5113,8 +5113,7 @@ public class GameServerTCP
 
 		//strip off header
 		s = s.substring(s.indexOf(":")+1);
-
-
+		
 		//log.debug(s);
 		createRoom(s,userID);
 
