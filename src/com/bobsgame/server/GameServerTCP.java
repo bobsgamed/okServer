@@ -746,7 +746,13 @@ public class GameServerTCP
 
 
 			//if(BobNet.debugMode)
-			if(message.startsWith("ping")==false && message.startsWith("pong")==false && message.startsWith("Server_Stats")==false)
+			if(
+					message.startsWith("ping")==false && 
+					message.startsWith("pong")==false && 
+					message.startsWith("Server_Stats")==false && 
+					message.startsWith("Online_Friends")==false && 
+					message.startsWith("Bobs_Game_RoomList")==false
+				)
 			{
 				long userID = -1;
 				String userName = "";
@@ -1107,7 +1113,12 @@ public class GameServerTCP
 		int compSize = s.length();
 		String com = ("Compressed "+origSize+" to "+compSize+" "+(int)(((float)((float)compSize/(float)origSize))*100)+"%");
 
-		if(plainTextCat.indexOf("Server_Stats")==-1)
+		if(
+				plainTextCat.indexOf("Server_Stats")==-1 && 
+				plainTextCat.indexOf("Online_Friends")==-1 && 
+				plainTextCat.indexOf("Bobs_Game_RoomList")==-1 &&
+				plainTextCat.indexOf("Friend_Is_Online")==-1
+			)
 		{
 			if(plainTextCat.indexOf("Login")!=-1 || plainTextCat.indexOf("Reconnect") != -1 || plainTextCat.indexOf("Create_Account") != -1)
 			log.info("SEND CLIENT: ("+c.getId()+") "+userName+" | "+plainTextCat.substring(0, plainTextCat.indexOf(":")+1)+"(censored) "+com);
