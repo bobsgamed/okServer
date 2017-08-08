@@ -5057,7 +5057,7 @@ public class GameServerTCP
 			if(System.currentTimeMillis() - r.timeLastGotUpdate > 1000*20)
 			{
 				roomsByRoomUUID.remove(r.uuid);
-				roomsByUserID.remove(r.hostUserID,r);
+				roomsByUserID.remove(r.multiplayer_HostUserID,r);
 				rooms.remove(r);
 				i--;
 			}
@@ -5096,12 +5096,12 @@ public class GameServerTCP
 		BobsGameRoom r = roomsByRoomUUID.get(roomUUID);
 		if(r!=null)
 		{
-			BobsGameClient host = clientsByUserID.get(r.hostUserID);
+			BobsGameClient host = clientsByUserID.get(r.multiplayer_HostUserID);
 			if(host!=null)
 			{
 				//write(host.channel,BobNet.Bobs_Game_TellRoomHostToAddMyUserID+s+BobNet.endline);
 
-				tellUserIDThatUserIDIsOnline(r.hostUserID,userID);
+				tellUserIDThatUserIDIsOnline(r.multiplayer_HostUserID,userID);
 			}
 		}
 
@@ -5183,25 +5183,25 @@ public class GameServerTCP
 	{//===============================================================================================
 
 		//hostUserID,roomUUID,`gameSequenceOrTypeName`,isGameSequenceOrType,gameSequenceOrTypeUUID,usersInRoom,maxUsers,private,tournament,multiplayerOptions,
-		BobsGameRoom newRoom = new BobsGameRoom().decodeRoomData(s);
+		BobsGameRoom newRoom = new BobsGameRoom(s);
 
-		if(newRoom.hostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
+		if(newRoom.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
 
 
 		BobsGameRoom oldRoom = roomsByRoomUUID.get(newRoom.uuid);
 		if(oldRoom!=null)
 		{
-			if(oldRoom.hostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
+			if(oldRoom.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
 
 			roomsByRoomUUID.remove(newRoom.uuid);
-			roomsByUserID.remove(newRoom.hostUserID);
+			roomsByUserID.remove(newRoom.multiplayer_HostUserID);
 			rooms.remove(oldRoom);
 
 			newRoom.timeStarted = oldRoom.timeStarted;
 			newRoom.timeLastGotUpdate = System.currentTimeMillis();
 
 			roomsByRoomUUID.put(newRoom.uuid, newRoom);
-			roomsByUserID.put(newRoom.hostUserID, newRoom);
+			roomsByUserID.put(newRoom.multiplayer_HostUserID, newRoom);
 			rooms.add(newRoom);
 		}
 		else
@@ -5211,7 +5211,7 @@ public class GameServerTCP
 			newRoom.timeLastGotUpdate = System.currentTimeMillis();
 
 			roomsByRoomUUID.put(newRoom.uuid, newRoom);
-			roomsByUserID.put(newRoom.hostUserID, newRoom);
+			roomsByUserID.put(newRoom.multiplayer_HostUserID, newRoom);
 			rooms.add(newRoom);
 		}
 	}
@@ -5228,10 +5228,10 @@ public class GameServerTCP
 		BobsGameRoom r = roomsByRoomUUID.get(roomUUID);
 		if(r!=null)
 		{
-			if(r.hostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
+			if(r.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
 
 			roomsByRoomUUID.remove(r.uuid);
-			roomsByUserID.remove(r.hostUserID);
+			roomsByUserID.remove(r.multiplayer_HostUserID);
 			rooms.remove(r);
 		}
 	}
@@ -5299,7 +5299,7 @@ public class GameServerTCP
 		//update user stats
 		
 		String objectiveString = "Play To Credits";
-		if(game.endlessMode==1)objectiveString = "Endless Mode";
+		if(game.room.endlessMode==1)objectiveString = "Endless Mode";
 
 		//get user stats from database
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameAnyDifficulty =
@@ -5319,7 +5319,7 @@ public class GameServerTCP
 
 
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameAnyDifficulty =
-				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, game.isGameTypeOrSequence, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, "OVERALL", objectiveString);
+				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, game.isGameSequenceOrType, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, "OVERALL", objectiveString);
 		//update the userStats from the game stats
 		userStatsForThisGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score);
 		//update stats in db
@@ -5329,7 +5329,7 @@ public class GameServerTCP
 		//TODO: could get all userHighScores entries for this user, calculate favorite game and favorite difficulty
 
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameThisDifficulty =
-				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection,userID, userName, game.isGameTypeOrSequence, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, game.difficultyName, objectiveString);
+				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection,userID, userName, game.isGameSequenceOrType, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, game.difficultyName, objectiveString);
 		//update the highScore from the game stats
 		userStatsForThisGameThisDifficulty.updateFromGameStats(databaseConnection, game, score);
 		//now update userHighScore in DB
