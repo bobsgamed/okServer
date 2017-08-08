@@ -5293,6 +5293,10 @@ public class GameServerTCP
 			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();closeDBConnection(databaseConnection);return;}
 		}
 
+		if(game.room.isDefaultSettings()==false)
+		{
+			return;
+		}
 
 		LeaderBoardScore score = new LeaderBoardScore();
 
