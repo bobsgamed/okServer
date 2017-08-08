@@ -5293,8 +5293,12 @@ public class GameServerTCP
 			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();closeDBConnection(databaseConnection);return;}
 		}
 
+		String responseString = "`Game stats recorded successfully on server.`,";
+		
 		if(game.room.isDefaultSettings()==false)
 		{
+			responseString+="`Room settings were not default so score cannot apply to leaderboards.`,";
+			writeCompressed(c.channel,BobNet.Bobs_Game_GameStats_Response+responseString+BobNet.endline);
 			return;
 		}
 
@@ -5305,11 +5309,13 @@ public class GameServerTCP
 		String objectiveString = "Play To Credits";
 		if(game.room.endlessMode==1)objectiveString = "Endless Mode";
 
+		
+		
 		//get user stats from database
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameAnyDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", "OVERALL", objectiveString);
 		//update the userStats from the game stats
-		userStatsForAnyGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score);
+		userStatsForAnyGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
 		//update stats in db
 		userStatsForAnyGameAnyDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5317,7 +5323,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameThisDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", game.difficultyName, objectiveString);
 		//update the userStats from the game stats
-		userStatsForAnyGameThisDifficulty.updateFromGameStats(databaseConnection, game, score);
+		userStatsForAnyGameThisDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
 		//update stats in db
 		userStatsForAnyGameThisDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5325,7 +5331,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameAnyDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, game.isGameSequenceOrType, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, "OVERALL", objectiveString);
 		//update the userStats from the game stats
-		userStatsForThisGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score);
+		userStatsForThisGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
 		//update stats in db
 		userStatsForThisGameAnyDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5335,7 +5341,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameThisDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection,userID, userName, game.isGameSequenceOrType, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, game.difficultyName, objectiveString);
 		//update the highScore from the game stats
-		userStatsForThisGameThisDifficulty.updateFromGameStats(databaseConnection, game, score);
+		userStatsForThisGameThisDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
 		//now update userHighScore in DB
 		userStatsForThisGameThisDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5343,8 +5349,9 @@ public class GameServerTCP
 		//now that we have an elo score and planeswalker point score for this game we can check leaderboard and highscoreboard
 		//now get leaderBoards by eloScore for this game and difficulty, create it if it doesnt exist
 
-		boolean leaderBoardsModified = BobsGameLeaderBoardAndHighScoreBoard.updateLeaderBoardsAndHighScoreBoards(databaseConnection, game, score, userStatsForAnyGameAnyDifficulty, userStatsForAnyGameThisDifficulty, userStatsForThisGameAnyDifficulty, userStatsForThisGameThisDifficulty);
+		boolean leaderBoardsModified = BobsGameLeaderBoardAndHighScoreBoard.updateLeaderBoardsAndHighScoreBoards(databaseConnection, game, score, userStatsForAnyGameAnyDifficulty, userStatsForAnyGameThisDifficulty, userStatsForThisGameAnyDifficulty, userStatsForThisGameThisDifficulty, responseString);
 
+		writeCompressed(c.channel,BobNet.Bobs_Game_GameStats_Response+responseString+BobNet.endline);
 
 
 		closeDBConnection(databaseConnection);
