@@ -869,7 +869,7 @@ public class GameServerTCP
 			else
 			if(cause instanceof IOException)
 			{
-				log.error("Exception caught from Client connection - IOException: "+cause.getMessage());
+				//log.error("Exception caught from Client connection - IOException: "+cause.getMessage());
 			}
 			else
 			{
