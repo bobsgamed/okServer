@@ -5370,14 +5370,11 @@ public class GameServerTCP
 		
 		
 		String gameName = "";
-		if(game.isGameSequenceOrType=="GameType")gameName = game.gameTypeName;
-		if(game.isGameSequenceOrType=="GameSequence")gameName = game.gameSequenceName;
+		if(game.isGameSequenceOrType.equals("GameType"))gameName = game.gameTypeName;
+		if(game.isGameSequenceOrType.equals("GameSequence"))gameName = game.gameSequenceName;
 		
-		String gameType = "";
-		if(game.room.multiplayer_NumPlayers==1 && game.isLocalMultiplayer == 0 && game.isNetworkMultiplayer == 0)
-		{
-			gameType = "a singleplayer game";
-		}
+		String gameType = "a singleplayer game";
+		
 		if(game.isLocalMultiplayer==1)gameType = "a local multiplayer against "+game.numPlayers+" players";
 		if(game.isNetworkMultiplayer==1)gameType = "an online multiplayer against "+game.room.multiplayer_NumPlayers+" players";
 		if(game.room.multiplayer_TournamentRoom==1)gameType = "an online tournament against "+game.room.multiplayer_NumPlayers+" players";
@@ -5494,7 +5491,7 @@ public class GameServerTCP
 
 		query += "activityString"+" = ? , ";
 		query += "timeCreated"+" = ? , ";
-		query += "userName"+" = ? ";
+		query += "userName"+" = ? , ";
 		query += "userID"+" = ? , ";
 		query += "statsUUID"+" = ? ";
 	
