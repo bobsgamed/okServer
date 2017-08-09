@@ -5399,8 +5399,7 @@ public class GameServerTCP
 
 		String action = "";
 		if(game.complete==1)action = "completed";
-		if(game.died==1 && game.room.endlessMode==0)action = "lasted "+getNiceTime(game.timeLasted)+" in";
-		if(game.died==1 && game.room.endlessMode==1)action = "played";
+		if(game.died==1)action = "lasted "+getNiceTime(game.timeLasted)+" in";
 		if(game.won==1)action = "won in";
 		if(game.lost==1)action = "lost in";
 		
