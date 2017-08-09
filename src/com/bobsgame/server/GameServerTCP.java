@@ -5285,7 +5285,7 @@ public class GameServerTCP
 				String activityString = resultSet.getString("activityString");
 				
 				if(activityString==null)activityString = "";
-				else activityStrings.add(activityString);
+				else activityStrings.add(0,activityString);
 			}
 
 			resultSet.close();
@@ -5522,6 +5522,9 @@ public class GameServerTCP
 	//===============================================================================================
 	public void sendActivityUpdateToAllClients(String activityString)
 	{//===============================================================================================
+		
+		
+		//TODO: tell all servers to tell all clients
 		
 		Iterator<BobsGameClient> i = clientsByUserID.values().iterator();
 		while(i.hasNext())
