@@ -3,11 +3,7 @@ package com.bobsgame.server;
 import static java.lang.System.out;
 import static org.jboss.netty.channel.Channels.pipeline;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Hashtable;
-import java.util.ArrayList;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -846,6 +842,7 @@ public class GameServerTCP
 			if(message.startsWith(BobNet.Bobs_Game_HostingPublicRoomEnded)){incomingBobsGameHostingPublicRoomEnded(e);return;}
 			if(message.startsWith(BobNet.Bobs_Game_GameStats)){incomingBobsGameGameStats(e);return;}
 			if(message.startsWith(BobNet.Bobs_Game_GetHighScoresAndLeaderboardsRequest)){incomingBobsGameGetHighScoresAndLeaderboardsRequest(e);return;}
+			if(message.startsWith(BobNet.Bobs_Game_ActivityStream_Request)){incomingBobsGameActivityStreamRequest(e);return;}
 
 
 
@@ -5258,6 +5255,81 @@ public class GameServerTCP
 	
 	
 	//===============================================================================================
+	private void incomingBobsGameActivityStreamRequest(MessageEvent e)
+	{//===============================================================================================
+		
+
+		//when add stats to database create activity string and add to database
+		
+		Connection databaseConnection = openAccountsDBOnAmazonRDS();
+		if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
+
+		ResultSet resultSet = null;
+		PreparedStatement ps = null;
+		
+		int count = 0;
+		ArrayList<String> activityStrings = new ArrayList<String>();
+		try
+		{
+			ps = databaseConnection.prepareStatement(
+					"SELECT " +
+					"* " +
+					"FROM "+BobNet.Bobs_Game_ActivityStream_DB_Name+"");
+			
+			resultSet = ps.executeQuery();
+			
+			
+			while(resultSet.next())
+			{
+				count++;
+				String activityString = resultSet.getString("activityString");
+				
+				if(activityString==null)activityString = "";
+				else activityStrings.add(0,activityString);
+			}
+
+			resultSet.close();
+			ps.close();
+
+		}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();closeDBConnection(databaseConnection);return;}
+	
+		int max = 20;
+		//if most recent stats has more than max rows drop the top row
+		if(count>max)
+		{
+			int removeAmount = count-max;
+			
+			try
+			{
+				ps = databaseConnection.prepareStatement(
+						"DELETE FROM table LIMIT "+removeAmount+";"
+						);
+				ps.executeUpdate();
+				ps.close();
+
+			}catch (Exception ex){log.error("DB ERROR: "+ex.getMessage());ex.printStackTrace();closeDBConnection(databaseConnection);return;}
+		}
+		
+		closeDBConnection(databaseConnection);
+
+		
+		
+		
+		if(activityStrings.size()>0)
+		{
+		
+			String responseString = "";//"`Game stats recorded successfully on server.`,";
+			for(int i=0;i<activityStrings.size();i++)
+			{
+				responseString += "`"+activityStrings.get(i)+"`,";
+			}
+			
+			writeCompressed(e.getChannel(),BobNet.Bobs_Game_ActivityStream_Response+responseString+BobNet.endline);
+		}
+	}
+	
+	
+	//===============================================================================================
 	private void incomingBobsGameGameStats(MessageEvent e)
 	{//===============================================================================================
 
@@ -5294,11 +5366,42 @@ public class GameServerTCP
 		}
 
 		String responseString = "`Game stats recorded successfully on server.`,";
+		String activityString = "";
+		
+		
+		String gameName = "";
+		if(game.isGameSequenceOrType=="GameType")gameName = game.gameTypeName;
+		if(game.isGameSequenceOrType=="GameSequence")gameName = game.gameSequenceName;
+		
+		String gameType = "";
+		if(game.room.multiplayer_NumPlayers==1 && game.isLocalMultiplayer == 0 && game.isNetworkMultiplayer == 0)
+		{
+			gameType = "a singleplayer game";
+		}
+		if(game.isLocalMultiplayer==1)gameType = "a local multiplayer against "+game.numPlayers+" players";
+		if(game.isNetworkMultiplayer==1)gameType = "an online multiplayer against "+game.room.multiplayer_NumPlayers+" players";
+		if(game.room.multiplayer_TournamentRoom==1)gameType = "an online tournament against "+game.room.multiplayer_NumPlayers+" players";
+
+		String action = "";
+		if(game.complete==1)action = "completed";
+		if(game.died==1 && game.room.endlessMode==0)action = "failed";
+		if(game.died==1 && game.room.endlessMode==1)action = "played";
+		if(game.won==1)action = "won in";
+		if(game.lost==1)action = "lost in";
+		
+		
+		activityString += "`"+game.userName+" "+action+" "+gameType+" in "+gameName+" "+game.difficultyName+"`,";
 		
 		if(game.room.isDefaultSettings()==false)
 		{
 			responseString+="`Room settings were not default so score cannot apply to leaderboards.`,";
+			
+			insertActivityInDB(databaseConnection, activityString, game.userName, game.userID, game.statsUUID);
+			closeDBConnection(databaseConnection);
+			
 			writeCompressed(c.channel,BobNet.Bobs_Game_GameStats_Response+responseString+BobNet.endline);
+			sendActivityUpdateToAllClients(activityString);
+			
 			return;
 		}
 
@@ -5315,7 +5418,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameAnyDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", "OVERALL", objectiveString);
 		//update the userStats from the game stats
-		userStatsForAnyGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
+		userStatsForAnyGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score, responseString, activityString);
 		//update stats in db
 		userStatsForAnyGameAnyDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5323,7 +5426,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForAnyGameThisDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, "OVERALL", "", "", "", "", game.difficultyName, objectiveString);
 		//update the userStats from the game stats
-		userStatsForAnyGameThisDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
+		userStatsForAnyGameThisDifficulty.updateFromGameStats(databaseConnection, game, score, responseString, activityString);
 		//update stats in db
 		userStatsForAnyGameThisDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5331,7 +5434,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameAnyDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection, userID, userName, game.isGameSequenceOrType, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, "OVERALL", objectiveString);
 		//update the userStats from the game stats
-		userStatsForThisGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
+		userStatsForThisGameAnyDifficulty.updateFromGameStats(databaseConnection, game, score, responseString, activityString);
 		//update stats in db
 		userStatsForThisGameAnyDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5341,7 +5444,7 @@ public class GameServerTCP
 		BobsGameUserStatsForSpecificGameAndDifficulty userStatsForThisGameThisDifficulty =
 				BobsGameUserStatsForSpecificGameAndDifficulty.getFromDBOrCreateNewIfNotExist(databaseConnection,userID, userName, game.isGameSequenceOrType, game.gameTypeUUID, game.gameTypeName, game.gameSequenceUUID, game.gameSequenceName, game.difficultyName, objectiveString);
 		//update the highScore from the game stats
-		userStatsForThisGameThisDifficulty.updateFromGameStats(databaseConnection, game, score, responseString);
+		userStatsForThisGameThisDifficulty.updateFromGameStats(databaseConnection, game, score, responseString, activityString);
 		//now update userHighScore in DB
 		userStatsForThisGameThisDifficulty.updateDB(databaseConnection,c.userID);
 
@@ -5349,14 +5452,15 @@ public class GameServerTCP
 		//now that we have an elo score and planeswalker point score for this game we can check leaderboard and highscoreboard
 		//now get leaderBoards by eloScore for this game and difficulty, create it if it doesnt exist
 
-		boolean leaderBoardsModified = BobsGameLeaderBoardAndHighScoreBoard.updateLeaderBoardsAndHighScoreBoards(databaseConnection, game, score, userStatsForAnyGameAnyDifficulty, userStatsForAnyGameThisDifficulty, userStatsForThisGameAnyDifficulty, userStatsForThisGameThisDifficulty, responseString);
+		boolean leaderBoardsModified = BobsGameLeaderBoardAndHighScoreBoard.updateLeaderBoardsAndHighScoreBoards(databaseConnection, game, score, userStatsForAnyGameAnyDifficulty, userStatsForAnyGameThisDifficulty, userStatsForThisGameAnyDifficulty, userStatsForThisGameThisDifficulty, responseString, activityString);
 
 		writeCompressed(c.channel,BobNet.Bobs_Game_GameStats_Response+responseString+BobNet.endline);
 
-
+		insertActivityInDB(databaseConnection, activityString, game.userName, game.userID, game.statsUUID);
+		
 		closeDBConnection(databaseConnection);
 
-
+		sendActivityUpdateToAllClients(activityString);
 
 		//send new userStats, modified gameStats or created gameStats, and any modified leaderboards
 
@@ -5374,7 +5478,68 @@ public class GameServerTCP
 			sendAllLeaderBoardsToClient(e);
 		}
 	}
+	
+	//===============================================================================================
+	public void insertActivityInDB(Connection databaseConnection, String activityString, String userName, long userID, String statsUUID)
+	{//===============================================================================================
+		
 
+		if(databaseConnection==null){log.error("DB ERROR: Could not open DB connection!");return;}
+
+		PreparedStatement ps = null;
+
+		String query =
+
+		"INSERT INTO "+BobNet.Bobs_Game_ActivityStream_DB_Name+" SET ";
+
+		query += "activityString"+" = ? , ";
+		query += "timeCreated"+" = ? , ";
+		query += "userName"+" = ? ";
+		query += "userID"+" = ? , ";
+		query += "statsUUID"+" = ? ";
+	
+
+		try
+		{
+			ps = databaseConnection.prepareStatement(query);
+
+			int n = 0;
+			
+			ps.setString(++n, activityString);
+			ps.setLong(++n, System.currentTimeMillis());
+			ps.setString(++n, userName);
+			ps.setLong(++n, userID);
+			ps.setString(++n, statsUUID);
+			
+			ps.executeUpdate();
+
+			ps.close();
+
+		}
+		catch (Exception ex){System.err.println("DB ERROR: "+ex.getMessage());}
+	}
+	
+	//===============================================================================================
+	public void sendActivityUpdateToAllClients(String activityString)
+	{//===============================================================================================
+		
+		
+		//TODO: tell all servers to tell all clients
+		
+		Iterator<BobsGameClient> i = clientsByUserID.values().iterator();
+		while(i.hasNext())
+		{
+			BobsGameClient check = i.next();
+			if(check!=null)
+			{
+				if(check.channel.isConnected())
+				{
+					writeCompressed(check.channel,BobNet.Bobs_Game_ActivityStream_Update+activityString+BobNet.endline);
+				}
+			}
+		}
+		
+	}
 
 	//===============================================================================================
 	public void sendAllUserStatsGameStatsAndLeaderBoardsToClient(MessageEvent e)
