@@ -5328,6 +5328,24 @@ public class GameServerTCP
 		}
 	}
 	
+	//=========================================================================================================================
+	public String getNiceTime(long ms)
+	{//=========================================================================================================================
+		int sec = (int)(ms / 1000);
+		int min = sec / 60;
+		int hrs = min / 60;
+
+		String niceTime = "";
+		if (hrs > 0 && hrs < 10)niceTime += "0"+hrs + "h ";
+		if (hrs > 0 && hrs >= 10)niceTime += ""+hrs + "h ";
+
+		if (min > 0 && min < 10)niceTime += "0" + min + "m ";
+		if (min > 0 && min >= 10)niceTime += ""+min + "m ";
+
+		if (sec > 0 && sec < 10)niceTime += "0" + sec + "s ";
+		if (sec > 0 && sec >= 10)niceTime += ""+sec + "s ";
+		return niceTime;
+	}
 	
 	//===============================================================================================
 	private void incomingBobsGameGameStats(MessageEvent e)
@@ -5381,7 +5399,7 @@ public class GameServerTCP
 
 		String action = "";
 		if(game.complete==1)action = "completed";
-		if(game.died==1 && game.room.endlessMode==0)action = "failed";
+		if(game.died==1 && game.room.endlessMode==0)action = "lasted "+getNiceTime(game.timeLasted)+" in";
 		if(game.died==1 && game.room.endlessMode==1)action = "played";
 		if(game.won==1)action = "won in";
 		if(game.lost==1)action = "lost in";
