@@ -5393,11 +5393,11 @@ public class GameServerTCP
 		if(game.isGameSequenceOrType.equals("GameType"))gameName = game.gameTypeName;
 		if(game.isGameSequenceOrType.equals("GameSequence"))gameName = game.gameSequenceName;
 		
-		String gameType = "a singleplayer game";
+		String gameType = "a singleplayer game of";
 		
-		if(game.isLocalMultiplayer==1)gameType = "a local multiplayer against "+game.numPlayers+" players";
-		if(game.isNetworkMultiplayer==1)gameType = "an online multiplayer against "+game.room.multiplayer_NumPlayers+" players";
-		if(game.room.multiplayer_TournamentRoom==1)gameType = "an online tournament against "+game.room.multiplayer_NumPlayers+" players";
+		if(game.isLocalMultiplayer==1)gameType = "a local multiplayer match with "+game.numPlayers+" players in";
+		if(game.isNetworkMultiplayer==1)gameType = "an online multiplayer match with "+game.room.multiplayer_NumPlayers+" players in";
+		if(game.room.multiplayer_TournamentRoom==1)gameType = "an online tournament with "+game.room.multiplayer_NumPlayers+" players in";
 
 		String action = "";
 		if(game.complete==1)action = "completed";
@@ -5406,7 +5406,7 @@ public class GameServerTCP
 		if(game.lost==1)action = "lost in";
 		
 		
-		activityString += "`"+game.userName+" "+action+" "+gameType+" in "+gameName+" "+game.difficultyName+"`,";
+		activityString += "`"+game.userName+" "+action+" "+gameType+" \""+gameName+"\" ("+game.difficultyName+")`,";
 		
 		if(game.room.isDefaultSettings()==false)
 		{
