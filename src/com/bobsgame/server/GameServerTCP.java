@@ -5321,7 +5321,7 @@ public class GameServerTCP
 			String responseString = "";//"`Game stats recorded successfully on server.`,";
 			for(int i=0;i<activityStrings.size();i++)
 			{
-				responseString += "`"+activityStrings.get(i)+"`,";
+				responseString += activityStrings.get(i);
 			}
 			
 			writeCompressed(e.getChannel(),BobNet.Bobs_Game_ActivityStream_Response+responseString+BobNet.endline);
@@ -5334,6 +5334,8 @@ public class GameServerTCP
 		int sec = (int)(ms / 1000);
 		int min = sec / 60;
 		int hrs = min / 60;
+		sec = sec % 60;
+		min = min % 60;
 
 		String niceTime = "";
 		if (hrs > 0 && hrs < 10)niceTime += "0"+hrs + "h ";
@@ -5342,8 +5344,8 @@ public class GameServerTCP
 		if (min > 0 && min < 10)niceTime += "0" + min + "m ";
 		if (min > 0 && min >= 10)niceTime += ""+min + "m ";
 
-		if (sec > 0 && sec < 10)niceTime += "0" + sec + "s ";
-		if (sec > 0 && sec >= 10)niceTime += ""+sec + "s ";
+		if (sec > 0 && sec < 10)niceTime += "0" + sec + "s";
+		if (sec > 0 && sec >= 10)niceTime += ""+sec + "s";
 		return niceTime;
 	}
 	
