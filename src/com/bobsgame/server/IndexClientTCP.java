@@ -40,6 +40,7 @@ import ch.qos.logback.classic.Logger;
 import com.bobsgame.ServerMain;
 import com.bobsgame.net.BobNet;
 import com.bobsgame.net.BobsGameClient;
+import com.bobsgame.net.BobsGameRoom;
 
 
 //=========================================================================================================================
@@ -707,7 +708,12 @@ public class IndexClientTCP
 		if(originatingServerID==-1)return;
 		if(roomString.length()==0)return;
 
-		ServerMain.gameServerTCP.createRoom(roomString,originatingUserID);
+		BobsGameRoom newRoom = ServerMain.gameServerTCP.createRoom(roomString,originatingUserID);
+		
+		if(newRoom!=null)
+		{
+			ServerMain.gameServerTCP.tellAllClientsNewRoomHasBeenCreated(newRoom, -1);
+		}
 	}
 
 

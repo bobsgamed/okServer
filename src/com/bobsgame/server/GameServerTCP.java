@@ -5127,14 +5127,37 @@ public class GameServerTCP
 		
 
 		//log.debug(s);
-		createRoom(s,userID);
+		BobsGameRoom newRoom = createRoom(s,userID);
 
+		if(newRoom!=null)
+		{
+			tellAllClientsNewRoomHasBeenCreated(newRoom, userID);
+		
+		}
 
+		//this also will tell all clients on other servers there is a new room hosted
 		ServerMain.indexClientTCP.send_INDEX_Tell_All_Servers_Bobs_Game_Hosting_Room_Update(s, userID);
-
-
+		
 	}
-
+	
+	//===============================================================================================
+	public void tellAllClientsNewRoomHasBeenCreated(BobsGameRoom room, long exceptUserID)
+	{//===============================================================================================
+		
+		Iterator<BobsGameClient> i = clientsByUserID.values().iterator();
+		while(i.hasNext())
+		{
+			BobsGameClient check = i.next();
+			if(check!=null)
+			{
+				if(check.channel.isConnected() && check.userID != exceptUserID)
+				{
+					writeCompressed(check.channel,BobNet.Bobs_Game_NewRoomCreatedUpdate+room.encodeRoomData()+BobNet.endline);
+				}
+			}
+		}
+		
+	}
 
 	//===============================================================================================
 	private void incomingBobsGameHostingPublicRoomStarted(MessageEvent e)
@@ -5176,19 +5199,20 @@ public class GameServerTCP
 
 
 	//===============================================================================================
-	public void createRoom(String s, long userID)
+	//returns new room if created, null if existing room is updated
+	public BobsGameRoom createRoom(String s, long userID)
 	{//===============================================================================================
 
 		//hostUserID,roomUUID,`gameSequenceOrTypeName`,isGameSequenceOrType,gameSequenceOrTypeUUID,usersInRoom,maxUsers,private,tournament,multiplayerOptions,
 		BobsGameRoom newRoom = new BobsGameRoom(s);
 
-		if(newRoom.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
+		if(newRoom.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return null;}
 
 
 		BobsGameRoom oldRoom = roomsByRoomUUID.get(newRoom.uuid);
 		if(oldRoom!=null)
 		{
-			if(oldRoom.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return;}
+			if(oldRoom.multiplayer_HostUserID!=userID){log.error("Room hostUserID did not match Client UserID");return null;}
 
 			roomsByRoomUUID.remove(newRoom.uuid);
 			roomsByUserID.remove(newRoom.multiplayer_HostUserID);
@@ -5200,6 +5224,8 @@ public class GameServerTCP
 			roomsByRoomUUID.put(newRoom.uuid, newRoom);
 			roomsByUserID.put(newRoom.multiplayer_HostUserID, newRoom);
 			rooms.add(newRoom);
+			
+			return null;
 		}
 		else
 		{
@@ -5210,6 +5236,8 @@ public class GameServerTCP
 			roomsByRoomUUID.put(newRoom.uuid, newRoom);
 			roomsByUserID.put(newRoom.multiplayer_HostUserID, newRoom);
 			rooms.add(newRoom);
+			
+			return newRoom;
 		}
 	}
 
@@ -5338,14 +5366,28 @@ public class GameServerTCP
 		min = min % 60;
 
 		String niceTime = "";
-		if (hrs > 0 && hrs < 10)niceTime += "0"+hrs + "h ";
-		if (hrs > 0 && hrs >= 10)niceTime += ""+hrs + "h ";
+		
+		if(hrs>0)
+		{
+			if (hrs > 0 && hrs < 10)niceTime += "0"+hrs + ":";
+			if (hrs >= 10)niceTime += ""+hrs + ":";
+	
+			if (min >= 0 && min < 10)niceTime += "0" + min + ":";
+			if (min >= 10)niceTime += ""+min + ":";
+	
+			if (sec >= 0 && sec < 10)niceTime += "0" + sec + "";
+			if (sec >= 10)niceTime += ""+sec + "";
+		}
+		else
+		{
 
-		if (min > 0 && min < 10)niceTime += "0" + min + "m ";
-		if (min > 0 && min >= 10)niceTime += ""+min + "m ";
-
-		if (sec > 0 && sec < 10)niceTime += "0" + sec + "s";
-		if (sec > 0 && sec >= 10)niceTime += ""+sec + "s";
+			if (min >= 0 && min < 10)niceTime += "0" + min + ":";
+			if (min >= 10)niceTime += ""+min + ":";
+	
+			if (sec >= 0 && sec < 10)niceTime += "0" + sec + "";
+			if (sec >= 10)niceTime += ""+sec + "";
+			
+		}
 		return niceTime;
 	}
 	
@@ -5400,13 +5442,16 @@ public class GameServerTCP
 		if(game.room.multiplayer_TournamentRoom==1)gameType = "an online tournament with "+game.room.multiplayer_NumPlayers+" players in";
 
 		String action = "";
-		if(game.complete==1)action = "completed";
+		String end = "";
+		if(game.complete==1) {action = "completed"; end = " in "+getNiceTime(game.timeLasted);}
 		if(game.died==1)action = "lasted "+getNiceTime(game.timeLasted)+" in";
-		if(game.won==1)action = "won in";
-		if(game.lost==1)action = "lost in";
+		if(game.won==1)action = "won";
+		if(game.lost==1)action = "lost";
 		
-		
-		activityString += "`"+game.userName+" "+action+" "+gameType+" \""+gameName+"\" ("+game.difficultyName+")`,";
+		if((game.timeLasted / 1000)>60)//if score is less than a minute don't log it
+		{
+			activityString += "`"+game.userName+" "+action+" "+gameType+" \""+gameName+"\" ("+game.difficultyName+")"+end+"`,";
+		}
 		
 		if(game.room.isDefaultSettings()==false)
 		{
