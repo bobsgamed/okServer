@@ -142,6 +142,7 @@ public class GameServerTCP
 	Timer timer;
 
 
+	public Vector<Channel> channels = new Vector<Channel>();
 	public ConcurrentHashMap<BobsGameClient,Channel> channelsByClient = new ConcurrentHashMap<BobsGameClient,Channel>();
 	public ConcurrentHashMap<Channel,BobsGameClient> clientsByChannel = new ConcurrentHashMap<Channel,BobsGameClient>();
 
@@ -502,7 +503,7 @@ public class GameServerTCP
 
 			log.info("channelConnected: ("+id+") "+ip+" "+getCityFromIP(ip));
 
-
+			channels.add(e.getChannel());
 
 		}
 
@@ -528,7 +529,7 @@ public class GameServerTCP
 			log.info("channelDisconnected: ("+id+") "+userName+" "+ip+" "+getCityFromIP(ip));
 
 
-
+			channels.remove(e.getChannel());
 
 
 
@@ -844,7 +845,7 @@ public class GameServerTCP
 			if(message.startsWith(BobNet.Bobs_Game_GetHighScoresAndLeaderboardsRequest)){incomingBobsGameGetHighScoresAndLeaderboardsRequest(e);return;}
 			if(message.startsWith(BobNet.Bobs_Game_ActivityStream_Request)){incomingBobsGameActivityStreamRequest(e);return;}
 
-
+			if(message.startsWith(BobNet.Chat_Message)){incomingChatMessage(e,true);return;}
 
 
 		}
@@ -5144,18 +5145,24 @@ public class GameServerTCP
 	public void tellAllClientsNewRoomHasBeenCreated(BobsGameRoom room, long exceptUserID)
 	{//===============================================================================================
 		
-		Iterator<BobsGameClient> i = clientsByUserID.values().iterator();
-		while(i.hasNext())
+		for(int i=0;i<channels.size();i++)
 		{
-			BobsGameClient check = i.next();
-			if(check!=null)
-			{
-				if(check.channel.isConnected() && check.userID != exceptUserID)
-				{
-					writeCompressed(check.channel,BobNet.Bobs_Game_NewRoomCreatedUpdate+room.encodeRoomData()+BobNet.endline);
-				}
-			}
+			Channel c = channels.get(i);
+			writeCompressed(c,BobNet.Bobs_Game_NewRoomCreatedUpdate+room.encodeRoomData()+BobNet.endline);
 		}
+		
+//		Iterator<BobsGameClient> i = clientsByUserID.values().iterator();
+//		while(i.hasNext())
+//		{
+//			BobsGameClient check = i.next();
+//			if(check!=null)
+//			{
+//				if(check.channel.isConnected() && check.userID != exceptUserID)
+//				{
+//					writeCompressed(check.channel,BobNet.Bobs_Game_NewRoomCreatedUpdate+room.encodeRoomData()+BobNet.endline);
+//				}
+//			}
+//		}
 		
 	}
 
@@ -5356,6 +5363,34 @@ public class GameServerTCP
 		}
 	}
 	
+	
+	//===============================================================================================
+	private void incomingChatMessage(MessageEvent e, boolean sendToIndex)
+	{//===============================================================================================
+		String s = (String) e.getMessage();
+
+		//strip off header
+		s = s.substring(s.indexOf(":")+1);
+
+		sendChatMessageToAllClients(s);
+
+		if(sendToIndex)ServerMain.indexClientTCP.send_INDEX_Tell_All_Servers_To_Send_Chat_Message_To_All_Clients(s);
+		
+		
+	}
+	//===============================================================================================
+	public void sendChatMessageToAllClients(String s)
+	{//===============================================================================================
+		for(int i=0;i<channels.size();i++)
+		{
+			Channel c = channels.get(i);
+			writeCompressed(c,BobNet.Chat_Message+s+BobNet.endline);
+		}
+		
+	}
+	
+	
+	
 	//=========================================================================================================================
 	public String getNiceTime(long ms)
 	{//=========================================================================================================================
@@ -5522,6 +5557,7 @@ public class GameServerTCP
 		closeDBConnection(databaseConnection);
 
 		sendActivityUpdateToAllClients(activityString);
+		ServerMain.indexClientTCP.send_INDEX_Tell_All_Servers_To_Send_Activity_Update_To_All_Clients(activityString);
 
 		//send new userStats, modified gameStats or created gameStats, and any modified leaderboards
 
@@ -5583,23 +5619,14 @@ public class GameServerTCP
 	//===============================================================================================
 	public void sendActivityUpdateToAllClients(String activityString)
 	{//===============================================================================================
-		
-		
-		//TODO: tell all servers to tell all clients
-		
-		Iterator<BobsGameClient> i = clientsByUserID.values().iterator();
-		while(i.hasNext())
+						
+		for(int i=0;i<channels.size();i++)
 		{
-			BobsGameClient check = i.next();
-			if(check!=null)
-			{
-				if(check.channel.isConnected())
-				{
-					writeCompressed(check.channel,BobNet.Bobs_Game_ActivityStream_Update+activityString+BobNet.endline);
-				}
-			}
+			Channel c = channels.get(i);
+			
+			writeCompressed(c,BobNet.Bobs_Game_ActivityStream_Update+activityString+BobNet.endline);	
 		}
-		
+			
 	}
 
 	//===============================================================================================

@@ -253,6 +253,8 @@ public class IndexClientTCP
 
 			if(s.startsWith(BobNet.Server_Bobs_Game_Hosting_Room_Update)){incoming_Server_Bobs_Game_Hosting_Room_Update(e);return;}
 			if(s.startsWith(BobNet.Server_Bobs_Game_Remove_Room)){incoming_Server_Bobs_Game_Remove_Room(e);return;}
+			if(s.startsWith(BobNet.Server_Send_Activity_Update_To_All_Clients)){incoming_Server_Send_Activity_Update_To_All_Clients(e);return;}
+			if(s.startsWith(BobNet.Server_Send_Chat_Message_To_All_Clients)){incoming_Server_Send_Chat_Message_To_All_Clients(e);return;}
 
 		}
 
@@ -674,16 +676,17 @@ public class IndexClientTCP
 	}
 
 
-
+	
 	//===============================================================================================
 	public void send_INDEX_Tell_All_Servers_Bobs_Game_Remove_Room(String s, long userID)
 	{//===============================================================================================
-
+		
 		if(BobNet.debugMode==false)
 		{
 			write(channel,BobNet.INDEX_Tell_All_Servers_Bobs_Game_Remove_Room+serverID+","+userID+","+s+":"+BobNet.endline);
 		}
 	}
+
 
 
 	//===============================================================================================
@@ -743,4 +746,66 @@ public class IndexClientTCP
 		ServerMain.gameServerTCP.removeRoom(roomUUID,originatingUserID);
 	}
 
+	
+	
+	//===============================================================================================
+	public void send_INDEX_Tell_All_Servers_To_Send_Activity_Update_To_All_Clients(String activityString)
+	{//===============================================================================================
+		
+		if(BobNet.debugMode==false)
+		{
+			write(channel,BobNet.INDEX_Tell_All_Servers_To_Send_Activity_Update_To_All_Clients+serverID+","+activityString+":END:"+BobNet.endline);
+		}
+	}
+	
+	//===============================================================================================
+	//this event should only come from the index server
+	//--------------------------------------------------
+	public void incoming_Server_Send_Activity_Update_To_All_Clients(MessageEvent e)
+	{//===============================================================================================
+		
+
+		//Server_Send_Activity_Update_To_All_Clients:activityString:
+		String s = (String) e.getMessage();
+		s = s.substring(s.indexOf(":")+1);
+		
+		String activityString = s.substring(0,s.indexOf(":END:"));
+		
+		if(activityString.length()==0)return;
+		
+		ServerMain.gameServerTCP.sendActivityUpdateToAllClients(activityString);
+	}
+	
+
+	//===============================================================================================
+	public void send_INDEX_Tell_All_Servers_To_Send_Chat_Message_To_All_Clients(String s)
+	{//===============================================================================================
+
+		if(BobNet.debugMode==false)
+		{
+			write(channel,BobNet.INDEX_Tell_All_Servers_To_Send_Chat_Message_To_All_Clients+serverID+","+s+":END:"+BobNet.endline);
+		}
+	}
+	
+	//===============================================================================================
+	//this event should only come from the index server
+	//--------------------------------------------------
+	public void incoming_Server_Send_Chat_Message_To_All_Clients(MessageEvent e)
+	{//===============================================================================================
+
+
+		//Server_Send_Chat_Message_To_All_Clients:activityString:
+		String s = (String) e.getMessage();
+		s = s.substring(s.indexOf(":")+1);
+
+		String chatMessage = s.substring(0,s.indexOf(":END:"));
+
+		if(chatMessage.length()==0)return;
+
+		ServerMain.gameServerTCP.sendChatMessageToAllClients(chatMessage);
+	}
+	
+	
+	
+	
 }
