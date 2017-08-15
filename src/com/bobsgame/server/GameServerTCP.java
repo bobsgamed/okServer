@@ -21,7 +21,6 @@ import java.util.*;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
-import com.bobsgame.PrivateCredentials;
 import com.bobsgame.ServerMain;
 import com.bobsgame.shared.Utils;
 import com.bobsgame.shared.MapData;
@@ -5337,7 +5336,7 @@ public class GameServerTCP
 			try
 			{
 				ps = databaseConnection.prepareStatement(
-						"DELETE FROM table LIMIT "+removeAmount+";"
+						"DELETE FROM "+BobNet.Bobs_Game_ActivityStream_DB_Name+" LIMIT "+removeAmount+";"
 						);
 				ps.executeUpdate();
 				ps.close();
@@ -5367,10 +5366,21 @@ public class GameServerTCP
 	//===============================================================================================
 	private void incomingChatMessage(MessageEvent e, boolean sendToIndex)
 	{//===============================================================================================
+		
+		BobsGameClient c = getClientConnectionByMessageEvent(e);
+		
+		String name = "Anonymous";
+		if(c!=null)name = c.userName;
+		//long userID = c.userName;
+		//if(userID==-1){log.error("Client UserID was -1");return;}
+		//String userName = c.userName;
+		
 		String s = (String) e.getMessage();
 
 		//strip off header
 		s = s.substring(s.indexOf(":")+1);
+		
+		s = name+": "+s;
 
 		sendChatMessageToAllClients(s);
 

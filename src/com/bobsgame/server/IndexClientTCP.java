@@ -41,6 +41,7 @@ import com.bobsgame.ServerMain;
 import com.bobsgame.net.BobNet;
 import com.bobsgame.net.BobsGameClient;
 import com.bobsgame.net.BobsGameRoom;
+import com.bobsgame.net.PrivateCredentials;
 
 
 //=========================================================================================================================
@@ -320,8 +321,6 @@ public class IndexClientTCP
 	}
 
 
-
-
 	//===============================================================================================
 	public void send_INDEX_Register_Server_Request()
 	{//===============================================================================================
@@ -329,9 +328,28 @@ public class IndexClientTCP
 		//if we already have a serverID, send it with the request.
 		//the index server will go through its hashtable and look for that serverID, setting it to the new connection channel.
 
-		write(channel,BobNet.INDEX_Register_Server_With_INDEX_Request+serverID+","+ServerMain.myIPAddressString+BobNet.endline);
+		write(channel,BobNet.INDEX_Register_Server_With_INDEX_Request+PrivateCredentials.passwordSalt+","+serverID+","+ServerMain.myIPAddressString+":"+BobNet.endline);
 
 	}
+
+
+	//===============================================================================================
+	public void incoming_Server_Registered_With_INDEX_Response(MessageEvent e)
+	{//===============================================================================================
+
+		//set the serverID
+
+		//Server_Registered_With_INDEX_Response:message:serverID:
+		String s = (String) e.getMessage();
+		s = s.substring(s.indexOf(":")+1);//message:serverID:
+		String message = s.substring(0,s.indexOf(":"));
+		log.info(message);
+		s = s.substring(s.indexOf(":")+1);
+		try{serverID = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();return;}
+
+	}
+
+
 
 
 
@@ -448,20 +466,6 @@ public class IndexClientTCP
 
 	}
 
-
-
-	//===============================================================================================
-	public void incoming_Server_Registered_With_INDEX_Response(MessageEvent e)
-	{//===============================================================================================
-
-		//set the serverID
-
-		//Server_Registered_With_INDEX_Response:serverID
-		String s = (String) e.getMessage();
-		s = s.substring(s.indexOf(":")+1);//serverID
-		try{serverID = Integer.parseInt(s.substring(0,s.indexOf(":")));}catch(NumberFormatException ex){ex.printStackTrace();return;}
-
-	}
 
 
 	//===============================================================================================
